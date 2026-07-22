@@ -154,6 +154,7 @@
       font-size: 16px;
       line-height: 1.35;
       word-break: break-word;
+      white-space: pre-wrap;
       cursor: pointer;
       position: relative;
     }
@@ -224,25 +225,32 @@
 
     #footer-bar {
       border-top: 0.5px solid var(--border-color);
-      padding: 10px 12px;
+      padding: 8px 12px;
       background: #121216;
       width: 100%;
     }
 
-    .input-container { display: flex; align-items: center; gap: 8px; width: 100%; }
+    .input-container { 
+      display: flex; 
+      align-items: flex-end; 
+      gap: 8px; 
+      width: 100%; 
+    }
 
     #visual-display {
       flex: 1;
-      padding: 10px 14px;
+      padding: 8px 14px;
       border: 1px solid #2d2d3a;
       border-radius: 20px;
       background: var(--input-bg);
       color: #ffffff;
       font-size: 16px;
-      min-height: 40px;
-      display: flex;
-      align-items: center;
+      line-height: 1.3;
+      min-height: 38px;
+      max-height: 120px;
+      overflow-y: auto;
       word-break: break-word;
+      white-space: pre-wrap;
       text-shadow: 0 0 4px rgba(255, 255, 255, 0.6);
       position: relative;
       outline: none;
@@ -258,8 +266,8 @@
     }
 
     #action-trigger {
-      width: 34px;
-      height: 34px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
       background: #2a2a34;
       color: #1c1c1e;
@@ -269,6 +277,7 @@
       justify-content: center;
       cursor: pointer;
       flex-shrink: 0;
+      margin-bottom: 3px;
       transition: all 0.2s ease;
     }
 
@@ -531,7 +540,7 @@
     const alphaLayout = document.getElementById("alpha-layout");
     const numLayout = document.getElementById("num-layout");
 
-    // ATTACH INPUT LISTENERS & CLEANUP ON INPUT BOX
+    // ATTACH LISTENERS & MANAGE FOCUS
     function attachInputListeners(el) {
       el.addEventListener("focus", () => {
         el.setAttribute("inputmode", "none");
@@ -541,12 +550,28 @@
         if (isKbdHidden) openKeyboard();
       });
 
-      el.addEventListener("input", updateSendButton);
+      el.addEventListener("input", () => {
+        updateSendButton();
+        autoScrollDisplay();
+      });
+
+      el.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          if (!e.shiftKey) {
+            e.preventDefault();
+            handleSend();
+          }
+        }
+      });
     }
 
     attachInputListeners(visualDisplay);
 
-    // DEEP CLEAN RESET TO WIPE ALL STUCK HIDDEN DOM NODES
+    function autoScrollDisplay() {
+      visualDisplay.scrollTop = visualDisplay.scrollHeight;
+    }
+
+    // DEEP CLEAN RESET FOR INPUT BAR
     function forceClearInput() {
       const parent = visualDisplay.parentNode;
       const newDisplay = document.createElement("div");
@@ -587,7 +612,7 @@
       updateSendButton();
     }
 
-    // INDEPENDENT SCROLL vs DECK DRAG LOGIC
+    // SWIPE TIMELINE TO HIDE KEYBOARD (iMessage behavior)
     let touchStartY = 0;
     let touchCurrentY = 0;
     let isDraggingDeck = false;
@@ -641,7 +666,7 @@
       }
     }, { passive: true });
 
-    // TOGGLE MODES
+    // TOGGLE KEYBOARD MODES
     document.querySelectorAll(".mode-toggle").forEach(btn => {
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -666,7 +691,7 @@
     document.querySelectorAll(".return-btn").forEach(btn => {
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
-        handleSend();
+        insertAtCursor("\n");
       });
     });
 
@@ -686,6 +711,7 @@
         visualDisplay.textContent += text;
       }
       updateSendButton();
+      autoScrollDisplay();
     }
 
     function deleteAtCursor() {
@@ -701,6 +727,7 @@
         }
       }
       updateSendButton();
+      autoScrollDisplay();
     }
 
     document.querySelectorAll(".key").forEach(key => {
@@ -763,16 +790,14 @@
     actionTrigger.addEventListener("click", handleSend);
 
     function handleSend() {
-      const rawText = visualDisplay.textContent || "";
+      const rawText = visualDisplay.innerText || visualDisplay.textContent || "";
       const text = rawText.trim();
       if (text.length === 0) return;
 
       dispatchMessage(text, "outbound");
       outgoingCount++;
       
-      // REPLACE THE INPUT ELEMENT ENTIRELY SO NO PHANTOM DOM NODES REMAIN
       forceClearInput();
-
       checkAndTriggerReply();
     }
 
@@ -827,4 +852,6 @@
     updateSendButton();
   </script>
 </body>
-</html>
+</html>   
+   
+  
