@@ -328,7 +328,13 @@
       width: 100%;
       position: relative;
       flex-shrink: 0;
-      z-index: 50; /* High z-index so top-row popups show over chat timeline */
+      z-index: 50;
+      transform: translateY(0px);
+      will-change: transform;
+    }
+
+    #interactive-bottom-deck.animate-slide {
+      transition: transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1);
     }
 
     #footer-bar {
@@ -370,8 +376,9 @@
       -webkit-user-select: text;
     }
 
+    /* UPDATED PLACEHOLDER TEXT */
     #visual-display:empty:before {
-      content: 'iMessage';
+      content: 'Message';
       color: #53535d;
       text-shadow: none;
     }
@@ -409,24 +416,13 @@
       position: relative;
       border-top: 1px solid #1a1a24;
       max-height: 320px;
-      overflow: visible; /* ALLOW POPUPS TO EXTEND OUTSIDE KEYBOARD BOUNDS */
-      transition: max-height 0.25s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.2s ease;
+      overflow: visible;
       opacity: 1;
       z-index: 10;
     }
 
-    /* KEYBOARD HIDDEN COLLAPSED STATE */
-    .keyboard-hidden #custom-keyboard {
-      max-height: 0px !important;
-      padding-bottom: 0px !important;
-      border-top: none !important;
-      opacity: 0;
-      pointer-events: none;
-      overflow: hidden !important;
-    }
-
     .kbd-keys-wrapper {
-      padding: 12px 4px 0 4px; /* Added spacing so top row popups clear comfortably */
+      padding: 12px 4px 0 4px;
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -484,7 +480,7 @@
 
     .key-icon svg { width: 20px; height: 20px; fill: currentColor; filter: drop-shadow(0 0 3px rgba(255,255,255,0.3)); }
 
-    /* KEY POPUP - HIGH Z-INDEX TO ENSURE VISIBILITY OVER INPUT/CHAT */
+    /* KEY POPUP */
     .key-popup {
       position: absolute;
       top: -52px;
@@ -789,7 +785,8 @@
 
     function openKeyboard() {
       isKbdHidden = false;
-      chatView.classList.remove("keyboard-hidden");
+      bottomDeck.classList.add("animate-slide");
+      bottomDeck.style.transform = `translateY(0px)`;
       visualDisplay.focus();
       updateSendButton();
       chatTimeline.scrollTop = chatTimeline.scrollHeight;
@@ -797,11 +794,75 @@
 
     function hideKeyboard() {
       isKbdHidden = true;
-      chatView.classList.add("keyboard-hidden");
+      const keyboardHeight = customKeyboard.offsetHeight;
+      bottomDeck.classList.add("animate-slide");
+      bottomDeck.style.transform = `translateY(${keyboardHeight}px)`;
       visualDisplay.blur();
       updateSendButton();
       chatTimeline.scrollTop = chatTimeline.scrollHeight;
     }
+
+    // INTERACTIVE THUMB DRAG LOGIC (1:1 MOVEMENT)
+    let touchStartY = 0;
+    let initialTranslateY = 0;
+    let isDragging = false;
+    let lastTouchY = 0;
+    let touchTime = 0;
+    let velocity = 0;
+
+    chatTimeline.addEventListener("touchstart", (e) => {
+      touchStartY = e.touches[0].clientY;
+      lastTouchY = touchStartY;
+      touchTime = Date.now();
+      
+      // Calculate current offset relative to deck
+      const style = window.getComputedStyle(bottomDeck);
+      const matrix = new WebKitCSSMatrix(style.transform);
+      initialTranslateY = matrix.m41; // Y axis offset
+      
+      bottomDeck.classList.remove("animate-slide");
+      isDragging = true;
+    }, { passive: true });
+
+    chatTimeline.addEventListener("touchmove", (e) => {
+      if (!isDragging) return;
+
+      const currentY = e.touches[0].clientY;
+      const deltaY = currentY - touchStartY;
+      const now = Date.now();
+
+      // Velocity calculation
+      velocity = (currentY - lastTouchY) / (now - touchTime || 1);
+      lastTouchY = currentY;
+      touchTime = now;
+
+      // Only pull down if currently open or dragging downwards
+      let newTranslateY = initialTranslateY + deltaY;
+      const maxDismiss = customKeyboard.offsetHeight;
+
+      // Restrict drag boundaries
+      if (newTranslateY < 0) newTranslateY = 0; 
+      if (newTranslateY > maxDismiss) newTranslateY = maxDismiss;
+
+      bottomDeck.style.transform = `translateY(${newTranslateY}px)`;
+    }, { passive: true });
+
+    chatTimeline.addEventListener("touchend", () => {
+      if (!isDragging) return;
+      isDragging = false;
+
+      const maxDismiss = customKeyboard.offsetHeight;
+      const style = window.getComputedStyle(bottomDeck);
+      const matrix = new WebKitCSSMatrix(style.transform);
+      const currentTranslateY = matrix.m41;
+
+      // Dismiss if dragged down past 40% or flicked downward quickly
+      if (currentTranslateY > maxDismiss * 0.4 || velocity > 0.5) {
+        hideKeyboard();
+      } else {
+        openKeyboard();
+      }
+    });
 
     // TAPBACK REACTION LOGIC
     tapbackOverlay.addEventListener("click", (e) => {
@@ -825,23 +886,6 @@
       tapbackOverlay.style.display = "flex";
       triggerHaptic('medium');
     }
-
-    // SWIPE TIMELINE TO HIDE KEYBOARD
-    let touchStartY = 0;
-    let touchCurrentY = 0;
-
-    chatTimeline.addEventListener("touchstart", (e) => {
-      touchStartY = e.touches[0].clientY;
-    }, { passive: true });
-
-    chatTimeline.addEventListener("touchmove", (e) => {
-      touchCurrentY = e.touches[0].clientY;
-      const deltaY = touchCurrentY - touchStartY;
-
-      if (deltaY > 40 && !isKbdHidden) {
-        hideKeyboard();
-      }
-    }, { passive: true });
 
     // TOGGLE KEYBOARD MODES
     document.querySelectorAll(".mode-toggle").forEach(btn => {
