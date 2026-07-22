@@ -3,15 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#000000">
+
   <title>Messages</title>
   <style>
     :root {
-      --bg-color: #000000;
-      --bubble-sent: #0b84ff;
-      --bubble-received: #26252a;
-      --text-color: #ffffff;
-      --input-bg: #1c1c1e;
-      --border-color: #2c2c2e;
+      --header-bg: #121216;
+      --app-bg: #000000;
+      --border-color: #22222a;
+      --bubble-inbound: #1c1c24;
+      --text-main: #ffffff;
+      --accent-blue: #0b84fe;
+      --neon-cyan: #00f3ff;
+      --neon-glow: 0 0 6px rgba(0, 243, 255, 0.7), 0 0 12px rgba(0, 243, 255, 0.4);
+      --input-bg: #141418;
+      --kbd-bg: #0d0d12;
+      --key-top: #2a2a34;
+      --key-bottom: #1a1a22;
+      --key-shadow: #0a0a0f;
+      --key-special-top: #1e1e28;
+      --key-special-bottom: #14141d;
+      --popup-bg: #3a3a46;
     }
 
     * {
@@ -19,51 +33,61 @@
       margin: 0;
       padding: 0;
       -webkit-tap-highlight-color: transparent;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+      -webkit-touch-callout: none;
     }
 
     html, body {
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      height: 100%;
       width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background-color: var(--app-bg);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
       overflow: hidden;
-      position: fixed;
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      user-select: none;
+      -webkit-user-select: none;
     }
 
-    /* Outer Wrapper using visualViewport height via JS */
     #app-container {
       display: flex;
       flex-direction: column;
       width: 100%;
-      height: 100vh;
-      height: 100dvh; /* Dynamic Viewport Units for iOS Safari */
-      padding-top: env(safe-area-inset-top);
-      padding-bottom: env(safe-area-inset-bottom);
+      height: 100%;
+      overflow: hidden;
+      position: relative;
     }
 
-    /* Secret Invisible Reset Target at Top Left */
+    /* SECRET INVISIBLE RESET ZONE */
     #secret-reset-zone {
       position: absolute;
       top: 0;
       left: 0;
-      width: 50px;
-      height: 50px;
+      width: 60px;
+      height: 60px;
       z-index: 9999;
       background: transparent;
     }
 
-    /* Fake Header */
-    .header {
+    /* REALISTIC IMESSAGE HEADER */
+    #app-header {
+      min-height: 50px;
+      background-color: rgba(18, 18, 22, 0.85);
+      border-bottom: 0.5px solid var(--border-color);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 10px 16px;
-      border-bottom: 0.5px solid var(--border-color);
-      background-color: rgba(0, 0, 0, 0.85);
+      padding: 0 16px;
+      padding-top: max(4px, env(safe-area-inset-top));
+      flex-shrink: 0;
+      z-index: 10;
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      z-index: 10;
     }
 
     .header-back {
@@ -71,7 +95,6 @@
       font-size: 17px;
       display: flex;
       align-items: center;
-      gap: 4px;
     }
 
     .header-contact {
@@ -79,124 +102,285 @@
     }
 
     .contact-avatar {
-      width: 30px;
-      height: 30px;
+      width: 28px;
+      height: 28px;
       background-color: #8e8e93;
       border-radius: 50%;
       margin: 0 auto 2px auto;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
       color: #fff;
     }
 
     .contact-name {
-      font-size: 12px;
+      font-size: 11px;
       color: #8e8e93;
-      font-weight: 400;
     }
 
-    /* Messages Area */
-    .chat-area {
+    /* TIMELINE */
+    #chat-timeline {
       flex: 1;
+      padding: 12px 16px;
       overflow-y: auto;
-      padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 12px;
+      width: 100%;
       -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
     }
 
-    .message {
-      max-width: 75%;
-      padding: 8px 14px;
+    .msg-row { display: flex; flex-direction: column; max-width: 78%; }
+    .inbound-align { align-self: flex-start; }
+    .outbound-align { align-self: flex-end; }
+
+    .msg-box {
       border-radius: 18px;
+      padding: 10px 15px;
       font-size: 16px;
       line-height: 1.35;
-      word-wrap: break-word;
-      animation: popIn 0.15s cubic-bezier(0.1, 0.9, 0.2, 1);
+      word-break: break-word;
+      cursor: pointer;
+      position: relative;
     }
 
-    .message.sent {
-      align-self: flex-end;
-      background-color: var(--bubble-sent);
+    .msg-inbound {
+      background-color: var(--bubble-inbound);
+      color: #ffffff;
+      border: 1px solid #2d2d3a;
+      border-bottom-left-radius: 4px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    }
+
+    .msg-outbound {
+      background: linear-gradient(135deg, #0b84fe 0%, #0055b3 100%);
       color: #ffffff;
       border-bottom-right-radius: 4px;
+      text-shadow: var(--neon-glow);
+      box-shadow: 0 0 12px rgba(11, 132, 254, 0.4), 0 4px 12px rgba(0, 0, 0, 0.5);
     }
 
-    .message.received {
+    .status-stamp { font-size: 10px; color: #636366; margin-top: 4px; padding: 0 4px; }
+
+    /* TYPING INDICATOR */
+    #typing-monitor {
+      display: none;
       align-self: flex-start;
-      background-color: var(--bubble-received);
-      color: #ffffff;
+      background: var(--bubble-inbound);
+      padding: 10px 16px;
+      border-radius: 18px;
       border-bottom-left-radius: 4px;
+      margin-left: 16px;
+      margin-bottom: 8px;
+      border: 1px solid #2d2d3a;
     }
 
-    /* Input Bar (Stick to keyboard) */
-    .input-bar {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 12px;
-      background-color: #000000;
+    .pulse-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background-color: var(--neon-cyan);
+      box-shadow: var(--neon-glow);
+      margin: 0 2px;
+      animation: pulse 1.2s infinite;
+    }
+    .pulse-dot:nth-child(2) { animation-delay: 0.2s; }
+    .pulse-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.3; transform: scale(0.8); }
+      50% { opacity: 1; transform: scale(1.2); }
+    }
+
+    /* FOOTER INPUT BAR */
+    #footer-bar {
       border-top: 0.5px solid var(--border-color);
-      padding-bottom: max(8px, env(safe-area-inset-bottom));
-    }
-
-    .input-wrapper {
-      flex: 1;
-      background-color: var(--input-bg);
-      border-radius: 20px;
-      border: 0.5px solid var(--border-color);
-      display: flex;
-      align-items: center;
-      padding: 6px 12px;
-    }
-
-    .input-field {
+      padding: 10px 12px;
+      background: #121216;
+      flex-shrink: 0;
       width: 100%;
-      background: transparent;
-      border: none;
-      outline: none;
+      z-index: 5;
+    }
+
+    .input-container { display: flex; align-items: center; gap: 8px; width: 100%; }
+
+    #visual-display {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1px solid #2d2d3a;
+      border-radius: 20px;
+      background: var(--input-bg);
       color: #ffffff;
       font-size: 16px;
-      max-height: 100px;
-      resize: none;
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+      word-break: break-word;
+      text-shadow: 0 0 4px rgba(255, 255, 255, 0.6);
+      position: relative;
     }
 
-    .send-btn {
-      width: 30px;
-      height: 30px;
-      background-color: var(--bubble-sent);
+    #visual-display.placeholder {
+      color: #53535d;
+      text-shadow: none;
+    }
+
+    /* BLINKING CURSOR */
+    .blinking-cursor {
+      display: inline-block;
+      width: 2px;
+      height: 18px;
+      background-color: var(--accent-blue);
+      box-shadow: 0 0 6px var(--accent-blue);
+      margin-left: 2px;
+      vertical-align: middle;
+      animation: blink 1s step-end infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    #action-trigger {
+      width: 34px;
+      height: 34px;
       border-radius: 50%;
+      background: #2a2a34;
+      color: #1c1c1e;
       border: none;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.2s ease;
     }
 
-    .send-btn svg {
-      fill: #ffffff;
-      width: 16px;
-      height: 16px;
+    #action-trigger svg { width: 16px; height: 16px; fill: currentColor; }
+    
+    #action-trigger.ready {
+      background: var(--accent-blue);
+      color: #ffffff;
+      box-shadow: 0 0 10px rgba(11, 132, 254, 0.6);
     }
 
-    @keyframes popIn {
-      0% { transform: scale(0.95); opacity: 0; }
-      100% { transform: scale(1); opacity: 1; }
+    /* 3D KEYBOARD WITH INTERACTIVE TOUCH TRANSITION */
+    #custom-keyboard {
+      background-color: var(--kbd-bg);
+      padding: 10px 4px max(14px, env(safe-area-inset-bottom)) 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex-shrink: 0;
+      position: relative;
+      border-top: 1px solid #1a1a24;
+      transform: translateY(0);
+      will-change: transform;
+      z-index: 2;
+    }
+
+    #custom-keyboard.animating {
+      transition: transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1);
+    }
+
+    #custom-keyboard.hidden {
+      transform: translateY(100%);
+    }
+
+    .kbd-row { display: flex; justify-content: center; gap: 6px; width: 100%; position: relative; }
+
+    .key {
+      background: linear-gradient(180deg, var(--key-top) 0%, var(--key-bottom) 100%);
+      color: #ffffff;
+      font-size: 18px;
+      font-weight: 500;
+      border-radius: 7px;
+      height: 44px;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 
+        inset 0 1px 0 rgba(255, 255, 255, 0.15),
+        0 4px 0 var(--key-shadow),
+        0 6px 10px rgba(0,0,0,0.6);
+      position: relative;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: transform 0.05s ease, box-shadow 0.05s ease;
+      text-shadow: var(--neon-glow);
+    }
+
+    .key:active, .key.pressed {
+      transform: translateY(3px);
+      box-shadow: 
+        inset 0 1px 0 rgba(255, 255, 255, 0.15),
+        0 1px 0 var(--key-shadow),
+        0 2px 4px rgba(0,0,0,0.6);
+    }
+
+    .key-special {
+      background: linear-gradient(180deg, var(--key-special-top) 0%, var(--key-special-bottom) 100%);
+      font-size: 13px;
+      flex: 1.4;
+      text-shadow: none;
+    }
+
+    .key-space { flex: 4.5; font-size: 13px; color: #8e8e93; text-shadow: none; }
+
+    .key-icon svg { width: 20px; height: 20px; fill: currentColor; filter: drop-shadow(0 0 3px rgba(255,255,255,0.3)); }
+
+    /* KEY POPUP FEEDBACK */
+    .key-popup {
+      position: absolute;
+      top: -54px;
+      width: 48px;
+      height: 56px;
+      background: var(--popup-bg);
+      color: #ffffff;
+      border-radius: 8px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 6px;
+      font-size: 26px;
+      font-weight: 600;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.8), 0 0 10px rgba(0, 243, 255, 0.3);
+      z-index: 100;
+      pointer-events: none;
+      transform: translateX(-50%);
+      left: 50%;
+      text-shadow: var(--neon-glow);
+      border: 1px solid rgba(0, 243, 255, 0.3);
+    }
+
+    .key-popup::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 6px 6px 0;
+      border-style: solid;
+      border-color: var(--popup-bg) transparent;
+      display: block;
+      width: 0;
     }
   </style>
 </head>
 <body>
 
-  <!-- Invisible secret trigger at top left corner -->
-  <div id="secret-reset-zone" onclick="clearMessages()"></div>
+  <!-- Secret Invisible Trigger Area -->
+  <div id="secret-reset-zone" onclick="resetScene()"></div>
 
   <div id="app-container">
     <!-- Header -->
-    <div class="header">
+    <div id="app-header">
       <div class="header-back">
         <svg width="12" height="20" viewBox="0 0 12 20" fill="none">
           <path d="M10 2L2 10L10 18" stroke="#0B84FF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -209,73 +393,386 @@
       <div style="width: 20px;"></div>
     </div>
 
-    <!-- Messages Container -->
-    <div class="chat-area" id="chatArea">
-      <!-- Messages appear here -->
+    <!-- Chat Timeline -->
+    <div id="chat-timeline"></div>
+
+    <!-- Typing Indicator -->
+    <div id="typing-monitor">
+      <span class="pulse-dot"></span>
+      <span class="pulse-dot"></span>
+      <span class="pulse-dot"></span>
     </div>
 
-    <!-- Bottom Input Bar -->
-    <div class="input-bar" id="inputBar">
-      <div class="input-wrapper">
-        <input type="text" id="messageInput" class="input-field" placeholder="iMessage" autocomplete="off" />
+    <!-- Footer Input Bar -->
+    <div id="footer-bar">
+      <div class="input-container">
+        <div id="visual-display" class="placeholder">iMessage</div>
+        <button id="action-trigger" aria-label="Send">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 3L12 21M12 3L5 10M12 3L19 10" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
       </div>
-      <button class="send-btn" id="sendBtn" onclick="sendMessage()">
-        <svg viewBox="0 0 24 24">
-          <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z" transform="rotate(-90 12 12)"/>
-        </svg>
-      </button>
+    </div>
+
+    <!-- Custom 3D On-Screen Keyboard -->
+    <div id="custom-keyboard">
+      <!-- ALPHA LAYOUT -->
+      <div id="alpha-layout" style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+        <div class="kbd-row">
+          <div class="key" data-char="q">q</div><div class="key" data-char="w">w</div>
+          <div class="key" data-char="e">e</div><div class="key" data-char="r">r</div>
+          <div class="key" data-char="t">t</div><div class="key" data-char="y">y</div>
+          <div class="key" data-char="u">u</div><div class="key" data-char="i">i</div>
+          <div class="key" data-char="o">o</div><div class="key" data-char="p">p</div>
+        </div>
+        <div class="kbd-row" style="padding: 0 12px;">
+          <div class="key" data-char="a">a</div><div class="key" data-char="s">s</div>
+          <div class="key" data-char="d">d</div><div class="key" data-char="f">f</div>
+          <div class="key" data-char="g">g</div><div class="key" data-char="h">h</div>
+          <div class="key" data-char="j">j</div><div class="key" data-char="k">k</div>
+          <div class="key" data-char="l">l</div>
+        </div>
+        <div class="kbd-row">
+          <div class="key key-special key-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 3L4 12h5v8h6v-8h5z"/></svg>
+          </div>
+          <div class="key" data-char="z">z</div><div class="key" data-char="x">x</div>
+          <div class="key" data-char="c">c</div><div class="key" data-char="v">v</div>
+          <div class="key" data-char="b">b</div><div class="key" data-char="n">n</div>
+          <div class="key" data-char="m">m</div>
+          <div class="key key-special key-icon backspace-btn">
+            <svg viewBox="0 0 24 24"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"/></svg>
+          </div>
+        </div>
+        <div class="kbd-row">
+          <div class="key key-special mode-toggle">123</div>
+          <div class="key key-special key-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
+          </div>
+          <div class="key key-space" data-char=" ">space</div>
+          <div class="key key-special return-btn">return</div>
+          <div class="key key-special key-icon mic-toggle">
+            <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.49 6-3.31 6-6.72h-1.7z"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- NUMERIC / SYMBOL LAYOUT -->
+      <div id="num-layout" style="display: none; flex-direction: column; gap: 10px; width: 100%;">
+        <div class="kbd-row">
+          <div class="key" data-char="1">1</div><div class="key" data-char="2">2</div>
+          <div class="key" data-char="3">3</div><div class="key" data-char="4">4</div>
+          <div class="key" data-char="5">5</div><div class="key" data-char="6">6</div>
+          <div class="key" data-char="7">7</div><div class="key" data-char="8">8</div>
+          <div class="key" data-char="9">9</div><div class="key" data-char="0">0</div>
+        </div>
+        <div class="kbd-row">
+          <div class="key" data-char="-">-</div><div class="key" data-char="/">/</div>
+          <div class="key" data-char=":">:</div><div class="key" data-char=";">;</div>
+          <div class="key" data-char="(">(</div><div class="key" data-char=")">)</div>
+          <div class="key" data-char="$">$</div><div class="key" data-char="&">&</div>
+          <div class="key" data-char="@">@</div><div class="key" data-char='"'>"</div>
+        </div>
+        <div class="kbd-row">
+          <div class="key" data-char=".">.</div><div class="key" data-char=",">,</div>
+          <div class="key" data-char="?">?</div><div class="key" data-char="!">!</div>
+          <div class="key" data-char="'">'</div><div class="key" data-char="#">#</div>
+          <div class="key" data-char="%">%</div><div class="key" data-char="*">*</div>
+          <div class="key key-special key-icon backspace-btn">
+            <svg viewBox="0 0 24 24"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"/></svg>
+          </div>
+        </div>
+        <div class="kbd-row">
+          <div class="key key-special mode-toggle">ABC</div>
+          <div class="key key-special key-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
+          </div>
+          <div class="key key-space" data-char=" ">space</div>
+          <div class="key key-special return-btn">return</div>
+          <div class="key key-special key-icon mic-toggle">
+            <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.49 6-3.31 6-6.72h-1.7z"/></svg>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
   <script>
-    const chatArea = document.getElementById('chatArea');
-    const messageInput = document.getElementById('messageInput');
-    const appContainer = document.getElementById('app-container');
+    const inboundScript = [
+      { triggerAfterMsgCount: 2, text: "Copy that. Watch your back, radar indicates movement near you." },
+      { triggerAfterMsgCount: 3, text: "I'm waiting by the north entrance." },
+      { triggerAfterMsgCount: 5, text: "Clear to move. Backup is in position." }
+    ];
 
-    // Send Message
-    function sendMessage() {
-      const text = messageInput.value.trim();
-      if (!text) return;
+    const RESPONSE_DELAY_MS = 4000;
 
-      const msgDiv = document.createElement('div');
-      msgDiv.className = 'message sent';
-      msgDiv.textContent = text;
+    let outgoingCount = 0;
+    let currentInputText = "";
+    let isNumMode = false;
+    let backspaceInterval = null;
 
-      chatArea.appendChild(msgDiv);
-      messageInput.value = '';
-      chatArea.scrollTop = chatArea.scrollHeight;
-    }
+    const chatTimeline = document.getElementById("chat-timeline");
+    const visualDisplay = document.getElementById("visual-display");
+    const actionTrigger = document.getElementById("action-trigger");
+    const typingMonitor = document.getElementById("typing-monitor");
+    const customKeyboard = document.getElementById("custom-keyboard");
+    const alphaLayout = document.getElementById("alpha-layout");
+    const numLayout = document.getElementById("num-layout");
 
-    // Enter key sends
-    messageInput.addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') {
-        sendMessage();
-      }
-    });
-
-    // Clear all messages (secret reset)
-    function clearMessages() {
-      chatArea.innerHTML = '';
-    }
-
-    // 3-finger triple tap to secret clear as well
-    let tapCount = 0;
+    // 3-FINGER SECRET TAP RESET
     document.addEventListener('touchstart', function(e) {
       if (e.touches.length === 3) {
-        clearMessages();
+        resetScene();
       }
     });
 
-    // Handle iOS Keyboard Viewport resizing dynamically
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', () => {
-        appContainer.style.height = window.visualViewport.height + 'px';
-        chatArea.scrollTop = chatArea.scrollHeight;
-      });
-      window.visualViewport.addEventListener('scroll', () => {
-        appContainer.style.height = window.visualViewport.height + 'px';
-      });
+    // OPEN KEYBOARD ON TAP
+    visualDisplay.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openKeyboard();
+    });
+
+    function openKeyboard() {
+      customKeyboard.classList.add("animating");
+      customKeyboard.classList.remove("hidden");
+      customKeyboard.style.transform = "translateY(0px)";
+      updateDisplay();
     }
+
+    function hideKeyboard() {
+      customKeyboard.classList.add("animating");
+      customKeyboard.classList.add("hidden");
+      customKeyboard.style.transform = "translateY(100%)";
+      updateDisplay();
+    }
+
+    // REAL-TIME THUMB DRAG KEYBOARD DISMISSAL
+    let touchStartY = 0;
+    let touchCurrentY = 0;
+    let isDragging = false;
+    let lastTouchTime = 0;
+    let lastTouchY = 0;
+    let dragVelocity = 0;
+
+    function handleTouchStart(e) {
+      if (customKeyboard.classList.contains("hidden")) return;
+      touchStartY = e.touches[0].clientY;
+      lastTouchY = touchStartY;
+      lastTouchTime = Date.now();
+      isDragging = true;
+      customKeyboard.classList.remove("animating");
+    }
+
+    function handleTouchMove(e) {
+      if (!isDragging || customKeyboard.classList.contains("hidden")) return;
+      touchCurrentY = e.touches[0].clientY;
+      const deltaY = touchCurrentY - touchStartY;
+
+      const now = Date.now();
+      const dt = now - lastTouchTime;
+      if (dt > 0) {
+        dragVelocity = (touchCurrentY - lastTouchY) / dt;
+      }
+      lastTouchY = touchCurrentY;
+      lastTouchTime = now;
+
+      if (deltaY > 0) {
+        customKeyboard.style.transform = `translateY(${deltaY}px)`;
+      } else {
+        customKeyboard.style.transform = `translateY(0px)`;
+      }
+    }
+
+    function handleTouchEnd(e) {
+      if (!isDragging || customKeyboard.classList.contains("hidden")) return;
+      isDragging = false;
+      const deltaY = touchCurrentY - touchStartY;
+
+      customKeyboard.classList.add("animating");
+
+      if (deltaY > 80 || dragVelocity > 0.4) {
+        hideKeyboard();
+      } else {
+        openKeyboard();
+      }
+    }
+
+    chatTimeline.addEventListener("touchstart", handleTouchStart, { passive: true });
+    chatTimeline.addEventListener("touchmove", handleTouchMove, { passive: true });
+    chatTimeline.addEventListener("touchend", handleTouchEnd, { passive: true });
+
+    // TOGGLE 123 / ABC KEYBOARD MODES
+    document.querySelectorAll(".mode-toggle").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        isNumMode = !isNumMode;
+        if (isNumMode) {
+          alphaLayout.style.display = "none";
+          numLayout.style.display = "flex";
+        } else {
+          alphaLayout.style.display = "flex";
+          numLayout.style.display = "none";
+        }
+      });
+    });
+
+    // MIC HIDE KEYBOARD
+    document.querySelectorAll(".mic-toggle").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        hideKeyboard();
+      });
+    });
+
+    // RETURN KEY SEND
+    document.querySelectorAll(".return-btn").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        handleSend();
+      });
+    });
+
+    // KEYPRESS & HOLD-TO-DELETE BACKSPACE HANDLERS
+    document.querySelectorAll(".key").forEach(key => {
+      if (key.classList.contains("mic-toggle") || key.classList.contains("mode-toggle") || key.classList.contains("return-btn")) return;
+
+      const isBackspace = key.classList.contains("backspace-btn");
+
+      const handlePressStart = (e) => {
+        e.preventDefault();
+        key.classList.add("pressed");
+
+        if (isBackspace) {
+          deleteChar();
+          backspaceInterval = setInterval(deleteChar, 100);
+        } else {
+          const charVal = key.getAttribute("data-char");
+          if (charVal !== null) {
+            currentInputText += charVal;
+            if (charVal.trim().length === 1) {
+              showKeyPopup(key, charVal.toUpperCase());
+            }
+          }
+          updateDisplay();
+        }
+      };
+
+      const handlePressEnd = () => {
+        key.classList.remove("pressed");
+        if (isBackspace) {
+          clearInterval(backspaceInterval);
+        }
+      };
+
+      key.addEventListener("touchstart", handlePressStart, { passive: false });
+      key.addEventListener("touchend", handlePressEnd);
+      key.addEventListener("mousedown", handlePressStart);
+      key.addEventListener("mouseup", handlePressEnd);
+      key.addEventListener("mouseleave", handlePressEnd);
+    });
+
+    function deleteChar() {
+      if (currentInputText.length > 0) {
+        currentInputText = currentInputText.slice(0, -1);
+        updateDisplay();
+      }
+    }
+
+    function showKeyPopup(keyElement, charLabel) {
+      const popup = document.createElement("div");
+      popup.className = "key-popup";
+      popup.textContent = charLabel;
+      keyElement.appendChild(popup);
+
+      setTimeout(() => {
+        popup.remove();
+      }, 150);
+    }
+
+    // UPDATE DISPLAY WITH BLINKING CURSOR
+    function updateDisplay() {
+      const isKbdActive = !customKeyboard.classList.contains("hidden");
+
+      if (currentInputText.length > 0) {
+        visualDisplay.classList.remove("placeholder");
+        visualDisplay.innerHTML = escapeHtml(currentInputText) + (isKbdActive ? '<span class="blinking-cursor"></span>' : '');
+        actionTrigger.classList.add("ready");
+      } else {
+        visualDisplay.classList.add("placeholder");
+        visualDisplay.innerHTML = (isKbdActive ? '<span class="blinking-cursor"></span>' : 'iMessage');
+        actionTrigger.classList.remove("ready");
+      }
+    }
+
+    function escapeHtml(text) {
+      return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    actionTrigger.addEventListener("click", handleSend);
+
+    function handleSend() {
+      if (currentInputText.trim().length === 0) return;
+
+      dispatchMessage(currentInputText, "outbound");
+      outgoingCount++;
+      currentInputText = "";
+      updateDisplay();
+
+      checkAndTriggerReply();
+    }
+
+    function checkAndTriggerReply() {
+      const matchingReply = inboundScript.find(item => item.triggerAfterMsgCount === outgoingCount);
+
+      if (matchingReply) {
+        typingMonitor.style.display = "block";
+        chatTimeline.scrollTop = chatTimeline.scrollHeight;
+
+        setTimeout(() => {
+          typingMonitor.style.display = "none";
+          dispatchMessage(matchingReply.text, "inbound");
+        }, RESPONSE_DELAY_MS);
+      }
+    }
+
+    // DISPATCH & TAP-TO-EDIT MESSAGES
+    function dispatchMessage(text, vector) {
+      const row = document.createElement("div");
+      row.className = `msg-row ${vector}-align`;
+
+      const box = document.createElement("div");
+      box.className = `msg-box msg-${vector}`;
+      box.textContent = text;
+
+      box.addEventListener("click", () => {
+        const updated = prompt("Edit message content:", box.textContent);
+        if (updated !== null && updated.trim() !== "") {
+          box.textContent = updated.trim();
+        }
+      });
+
+      const stamp = document.createElement("div");
+      stamp.className = "status-stamp";
+      stamp.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      row.appendChild(box);
+      row.appendChild(stamp);
+      chatTimeline.appendChild(row);
+
+      chatTimeline.scrollTop = chatTimeline.scrollHeight;
+    }
+
+    function resetScene() {
+      outgoingCount = 0;
+      currentInputText = "";
+      chatTimeline.innerHTML = "";
+      updateDisplay();
+      typingMonitor.style.display = "none";
+      openKeyboard();
+    }
+
+    updateDisplay();
   </script>
 </body>
 </html>
