@@ -137,14 +137,26 @@
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 6px;
       width: 100%;
       -webkit-overflow-scrolling: touch;
       touch-action: pan-y;
       overscroll-behavior-y: contain;
     }
 
-    .msg-row { display: flex; flex-direction: column; max-width: 78%; }
+    .msg-row { 
+      display: flex; 
+      flex-direction: column; 
+      max-width: 78%; 
+      position: relative;
+      animation: springPop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    @keyframes springPop {
+      0% { opacity: 0; transform: scale(0.85) translateY(10px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
     .inbound-align { align-self: flex-start; }
     .outbound-align { align-self: flex-end; }
 
@@ -157,25 +169,124 @@
       white-space: pre-wrap;
       cursor: pointer;
       position: relative;
+      transition: transform 0.1s ease;
+    }
+
+    .msg-box:active {
+      transform: scale(0.97);
     }
 
     .msg-inbound {
       background-color: var(--bubble-inbound);
       color: #ffffff;
       border: 1px solid #2d2d3a;
-      border-bottom-left-radius: 4px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
     }
 
     .msg-outbound {
       background: linear-gradient(135deg, #0b84fe 0%, #0055b3 100%);
       color: #ffffff;
-      border-bottom-right-radius: 4px;
       text-shadow: var(--neon-glow);
       box-shadow: 0 0 12px rgba(11, 132, 254, 0.4), 0 4px 12px rgba(0, 0, 0, 0.5);
     }
 
-    .status-stamp { font-size: 10px; color: #636366; margin-top: 4px; padding: 0 4px; }
+    /* BUBBLE TAILS */
+    .has-tail.msg-inbound {
+      border-bottom-left-radius: 4px;
+    }
+
+    .has-tail.msg-inbound::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: -6px;
+      width: 10px;
+      height: 10px;
+      background-color: var(--bubble-inbound);
+      border-left: 1px solid #2d2d3a;
+      border-bottom: 1px solid #2d2d3a;
+      clip-path: polygon(100% 0, 0 100%, 100% 100%);
+    }
+
+    .has-tail.msg-outbound {
+      border-bottom-right-radius: 4px;
+    }
+
+    .has-tail.msg-outbound::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      right: -6px;
+      width: 10px;
+      height: 10px;
+      background: #0055b3;
+      clip-path: polygon(0 0, 0 100%, 100% 100%);
+    }
+
+    /* REACTION TAPBACK BADGE */
+    .tapback-badge {
+      position: absolute;
+      top: -12px;
+      background: #2a2a36;
+      border: 1px solid var(--neon-cyan);
+      box-shadow: var(--neon-glow);
+      border-radius: 12px;
+      padding: 2px 6px;
+      font-size: 13px;
+      z-index: 5;
+      animation: springPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .inbound-align .tapback-badge { right: -6px; }
+    .outbound-align .tapback-badge { left: -6px; }
+
+    /* FLOATING TAPBACK MENU */
+    #tapback-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .tapback-bar {
+      background: rgba(30, 30, 40, 0.95);
+      border: 1px solid var(--neon-cyan);
+      box-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
+      border-radius: 24px;
+      padding: 8px 14px;
+      display: flex;
+      gap: 14px;
+      animation: springPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .tapback-option {
+      font-size: 22px;
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+
+    .tapback-option:active {
+      transform: scale(1.4);
+    }
+
+    .status-stamp { 
+      font-size: 10px; 
+      color: #636366; 
+      margin-top: 2px; 
+      margin-bottom: 6px;
+      padding: 0 4px; 
+      font-weight: 500;
+    }
+
+    .outbound-align .status-stamp { text-align: right; }
 
     /* TYPING INDICATOR */
     #typing-monitor {
@@ -260,7 +371,7 @@
     }
 
     #visual-display:empty:before {
-      content: 'Message';
+      content: 'iMessage';
       color: #53535d;
       text-shadow: none;
     }
@@ -390,6 +501,18 @@
 
   <!-- Secret Invisible Trigger Area -->
   <div id="secret-reset-zone" onclick="resetScene()"></div>
+
+  <!-- TAPBACK REACTION OVERLAY -->
+  <div id="tapback-overlay">
+    <div class="tapback-bar">
+      <span class="tapback-option">❤️</span>
+      <span class="tapback-option">👍</span>
+      <span class="tapback-option">👎</span>
+      <span class="tapback-option">😆</span>
+      <span class="tapback-option">‼️</span>
+      <span class="tapback-option">❓</span>
+    </div>
+  </div>
 
   <div id="app-container">
     <!-- Header -->
@@ -530,6 +653,8 @@
     let isNumMode = false;
     let backspaceInterval = null;
     let isKbdHidden = false;
+    let activeTapbackTarget = null;
+    let lastOutboundStampEl = null;
 
     const chatTimeline = document.getElementById("chat-timeline");
     let visualDisplay = document.getElementById("visual-display");
@@ -539,8 +664,52 @@
     const customKeyboard = document.getElementById("custom-keyboard");
     const alphaLayout = document.getElementById("alpha-layout");
     const numLayout = document.getElementById("num-layout");
+    const tapbackOverlay = document.getElementById("tapback-overlay");
 
-    // ATTACH LISTENERS & MANAGE FOCUS
+    // WEB AUDIO SYNTHESIZER FOR IMESSAGE SOUNDS
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function playSound(type) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if (type === 'send') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.12);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.12);
+      } else if (type === 'receive') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(750, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(500, audioCtx.currentTime + 0.18);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.18);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.18);
+      } else if (type === 'tap') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.03);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.03);
+      }
+    }
+
+    function triggerHaptic(type = 'light') {
+      if (!navigator.vibrate) return;
+      if (type === 'light') navigator.vibrate(10);
+      else if (type === 'medium') navigator.vibrate(25);
+      else if (type === 'double') navigator.vibrate([15, 30, 15]);
+    }
+
+    // INPUT LISTENERS & FOCUS MANAGEMENT
     function attachInputListeners(el) {
       el.addEventListener("focus", () => {
         el.setAttribute("inputmode", "none");
@@ -556,11 +725,9 @@
       });
 
       el.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          if (!e.shiftKey) {
-            e.preventDefault();
-            handleSend();
-          }
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          handleSend();
         }
       });
     }
@@ -571,7 +738,6 @@
       visualDisplay.scrollTop = visualDisplay.scrollHeight;
     }
 
-    // DEEP CLEAN RESET FOR INPUT BAR
     function forceClearInput() {
       const parent = visualDisplay.parentNode;
       const newDisplay = document.createElement("div");
@@ -612,7 +778,30 @@
       updateSendButton();
     }
 
-    // SWIPE TIMELINE TO HIDE KEYBOARD (iMessage behavior)
+    // TAPBACK REACTION LOGIC
+    tapbackOverlay.addEventListener("click", (e) => {
+      if (e.target.classList.contains("tapback-option") && activeTapbackTarget) {
+        const emoji = e.target.textContent;
+        let badge = activeTapbackTarget.querySelector(".tapback-badge");
+        if (!badge) {
+          badge = document.createElement("div");
+          badge.className = "tapback-badge";
+          activeTapbackTarget.appendChild(badge);
+        }
+        badge.textContent = emoji;
+        triggerHaptic('double');
+      }
+      tapbackOverlay.style.display = "none";
+      activeTapbackTarget = null;
+    });
+
+    function showTapback(msgBox) {
+      activeTapbackTarget = msgBox;
+      tapbackOverlay.style.display = "flex";
+      triggerHaptic('medium');
+    }
+
+    // SWIPE TIMELINE TO HIDE KEYBOARD
     let touchStartY = 0;
     let touchCurrentY = 0;
     let isDraggingDeck = false;
@@ -670,6 +859,7 @@
     document.querySelectorAll(".mode-toggle").forEach(btn => {
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
+        triggerHaptic('light');
         isNumMode = !isNumMode;
         if (isNumMode) {
           alphaLayout.style.display = "none";
@@ -684,6 +874,7 @@
     document.querySelectorAll(".mic-toggle").forEach(btn => {
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
+        triggerHaptic('light');
         hideKeyboard();
       });
     });
@@ -691,6 +882,7 @@
     document.querySelectorAll(".return-btn").forEach(btn => {
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
+        triggerHaptic('light');
         insertAtCursor("\n");
       });
     });
@@ -738,6 +930,8 @@
       const handlePressStart = (e) => {
         e.preventDefault();
         key.classList.add("pressed");
+        playSound('tap');
+        triggerHaptic('light');
 
         if (isBackspace) {
           deleteAtCursor();
@@ -794,6 +988,9 @@
       const text = rawText.trim();
       if (text.length === 0) return;
 
+      playSound('send');
+      triggerHaptic('medium');
+
       dispatchMessage(text, "outbound");
       outgoingCount++;
       
@@ -805,34 +1002,63 @@
       const matchingReply = inboundScript.find(item => item.triggerAfterMsgCount === outgoingCount);
 
       if (matchingReply) {
-        typingMonitor.style.display = "block";
-        chatTimeline.scrollTop = chatTimeline.scrollHeight;
+        setTimeout(() => {
+          if (lastOutboundStampEl) {
+            lastOutboundStampEl.textContent = `Read ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+          }
+          typingMonitor.style.display = "block";
+          chatTimeline.scrollTop = chatTimeline.scrollHeight;
+        }, 1500);
 
         setTimeout(() => {
           typingMonitor.style.display = "none";
+          playSound('receive');
+          triggerHaptic('double');
           dispatchMessage(matchingReply.text, "inbound");
         }, RESPONSE_DELAY_MS);
       }
     }
 
     function dispatchMessage(text, vector) {
+      // CLEAR TAILS FROM PREVIOUS MESSAGES IN SAME GROUP
+      const previousRows = chatTimeline.querySelectorAll(`.msg-row.${vector}-align`);
+      if (previousRows.length > 0) {
+        const lastBox = previousRows[previousRows.length - 1].querySelector('.msg-box');
+        if (lastBox) lastBox.classList.remove('has-tail');
+      }
+
       const row = document.createElement("div");
       row.className = `msg-row ${vector}-align`;
 
       const box = document.createElement("div");
-      box.className = `msg-box msg-${vector}`;
+      box.className = `msg-box msg-${vector} has-tail`;
       box.textContent = text;
 
+      // TAPBACK & EDIT LISTENERS
+      let pressTimer;
+      box.addEventListener("touchstart", () => {
+        pressTimer = setTimeout(() => showTapback(box), 500);
+      }, { passive: true });
+      box.addEventListener("touchend", () => clearTimeout(pressTimer));
+      
+      let lastTap = 0;
       box.addEventListener("click", () => {
-        const updated = prompt("Edit message content:", box.textContent);
-        if (updated !== null && updated.trim() !== "") {
-          box.textContent = updated.trim();
+        const now = Date.now();
+        if (now - lastTap < 300) {
+          showTapback(box);
         }
+        lastTap = now;
       });
 
       const stamp = document.createElement("div");
       stamp.className = "status-stamp";
-      stamp.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      
+      if (vector === "outbound") {
+        stamp.textContent = "Delivered";
+        lastOutboundStampEl = stamp;
+      } else {
+        stamp.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      }
 
       row.appendChild(box);
       row.appendChild(stamp);
@@ -852,6 +1078,4 @@
     updateSendButton();
   </script>
 </body>
-</html>   
-   
-  
+</html>
