@@ -63,7 +63,7 @@
       position: relative;
     }
 
-    /* SECRET INVISIBLE RESET ZONE */
+    /* SECRET RESET ZONE */
     #secret-reset-zone {
       position: absolute;
       top: 0;
@@ -141,7 +141,7 @@
       width: 100%;
       -webkit-overflow-scrolling: touch;
       touch-action: pan-y;
-      transition: padding-bottom 0.05s linear;
+      overscroll-behavior-y: contain;
     }
 
     .msg-row { display: flex; flex-direction: column; max-width: 78%; }
@@ -207,7 +207,7 @@
       50% { opacity: 1; transform: scale(1.2); }
     }
 
-    /* FOOTER INPUT BAR & KEYBOARD CONTAINER */
+    /* FOOTER INPUT BAR & KEYBOARD DECK */
     #interactive-bottom-deck {
       display: flex;
       flex-direction: column;
@@ -251,7 +251,6 @@
       -webkit-user-select: text;
     }
 
-    /* NEUTRAL PLACEHOLDER TEXT */
     #visual-display:empty:before {
       content: 'Message';
       color: #53535d;
@@ -341,7 +340,6 @@
 
     .key-icon svg { width: 20px; height: 20px; fill: currentColor; filter: drop-shadow(0 0 3px rgba(255,255,255,0.3)); }
 
-    /* KEY POPUP FEEDBACK */
     .key-popup {
       position: absolute;
       top: -54px;
@@ -533,19 +531,16 @@
     const alphaLayout = document.getElementById("alpha-layout");
     const numLayout = document.getElementById("num-layout");
 
-    // Prevent physical mobile browser popup
     visualDisplay.addEventListener("focus", (e) => {
       visualDisplay.setAttribute("inputmode", "none");
     });
 
-    // 3-FINGER SECRET TAP RESET
     document.addEventListener('touchstart', function(e) {
       if (e.touches.length === 3) {
         resetScene();
       }
     });
 
-    // RE-OPEN KEYBOARD ON DISPLAY TAP
     visualDisplay.addEventListener("click", (e) => {
       if (isKbdHidden) {
         openKeyboard();
@@ -556,7 +551,6 @@
       isKbdHidden = false;
       bottomDeck.classList.add("animating");
       bottomDeck.style.transform = "translateY(0px)";
-      chatTimeline.style.paddingBottom = "12px";
       visualDisplay.focus();
       updateSendButton();
     }
@@ -566,30 +560,31 @@
       bottomDeck.classList.add("animating");
       const keysHeight = customKeyboard.querySelector('.kbd-keys-wrapper').offsetHeight;
       bottomDeck.style.transform = `translateY(${keysHeight}px)`;
-      chatTimeline.style.paddingBottom = "12px";
       visualDisplay.blur();
       updateSendButton();
     }
 
-    // SMOOTH THUMB DRAG DISMISSAL
+    // INDEPENDENT SCROLL vs DECK DRAG LOGIC
     let touchStartY = 0;
     let touchCurrentY = 0;
-    let isDragging = false;
-    let lastTouchTime = 0;
+    let isDraggingDeck = false;
+    let initialScrollTop = 0;
     let lastTouchY = 0;
+    let lastTouchTime = 0;
     let dragVelocity = 0;
 
-    function handleTouchStart(e) {
+    chatTimeline.addEventListener("touchstart", (e) => {
       if (isKbdHidden) return;
       touchStartY = e.touches[0].clientY;
       lastTouchY = touchStartY;
       lastTouchTime = Date.now();
-      isDragging = true;
+      initialScrollTop = chatTimeline.scrollTop;
+      isDraggingDeck = false;
       bottomDeck.classList.remove("animating");
-    }
+    }, { passive: true });
 
-    function handleTouchMove(e) {
-      if (!isDragging || isKbdHidden) return;
+    chatTimeline.addEventListener("touchmove", (e) => {
+      if (isKbdHidden) return;
       touchCurrentY = e.touches[0].clientY;
       const deltaY = touchCurrentY - touchStartY;
 
@@ -601,36 +596,30 @@
       lastTouchY = touchCurrentY;
       lastTouchTime = now;
 
-      if (deltaY > 0) {
+      // Only drag keyboard down if user is at the top/bottom boundary limits
+      const isAtMaxScroll = (chatTimeline.scrollTop + chatTimeline.clientHeight >= chatTimeline.scrollHeight - 2);
+      
+      if (deltaY > 0 && (isAtMaxScroll || initialScrollTop >= chatTimeline.scrollHeight - chatTimeline.clientHeight)) {
+        isDraggingDeck = true;
         bottomDeck.style.transform = `translateY(${deltaY}px)`;
-        // Expand timeline padding naturally as deck lowers so bubbles shift without leaving gaps
-        chatTimeline.style.paddingBottom = `${12 + deltaY}px`;
-        chatTimeline.scrollTop = chatTimeline.scrollHeight;
-      } else {
-        bottomDeck.style.transform = `translateY(0px)`;
-        chatTimeline.style.paddingBottom = "12px";
       }
-    }
+    }, { passive: true });
 
-    function handleTouchEnd(e) {
-      if (!isDragging || isKbdHidden) return;
-      isDragging = false;
+    chatTimeline.addEventListener("touchend", () => {
+      if (!isDraggingDeck || isKbdHidden) return;
+      isDraggingDeck = false;
       const deltaY = touchCurrentY - touchStartY;
 
       bottomDeck.classList.add("animating");
 
-      if (deltaY > 80 || dragVelocity > 0.4) {
+      if (deltaY > 70 || dragVelocity > 0.4) {
         hideKeyboard();
       } else {
         openKeyboard();
       }
-    }
+    }, { passive: true });
 
-    chatTimeline.addEventListener("touchstart", handleTouchStart, { passive: true });
-    chatTimeline.addEventListener("touchmove", handleTouchMove, { passive: true });
-    chatTimeline.addEventListener("touchend", handleTouchEnd, { passive: true });
-
-    // TOGGLE 123 / ABC KEYBOARD MODES
+    // TOGGLE MODES
     document.querySelectorAll(".mode-toggle").forEach(btn => {
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -645,7 +634,6 @@
       });
     });
 
-    // MIC TOGGLE
     document.querySelectorAll(".mic-toggle").forEach(btn => {
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -653,7 +641,6 @@
       });
     });
 
-    // RETURN KEY SEND
     document.querySelectorAll(".return-btn").forEach(btn => {
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -661,7 +648,6 @@
       });
     });
 
-    // CURSOR INSERTION
     function insertAtCursor(text) {
       visualDisplay.focus();
       const sel = window.getSelection();
@@ -680,7 +666,6 @@
       updateSendButton();
     }
 
-    // CURSOR DELETION
     function deleteAtCursor() {
       visualDisplay.focus();
       const sel = window.getSelection();
@@ -696,7 +681,6 @@
       updateSendButton();
     }
 
-    // BACKSPACE & KEY CLICK HANDLERS
     document.querySelectorAll(".key").forEach(key => {
       if (key.classList.contains("mic-toggle") || key.classList.contains("mode-toggle") || key.classList.contains("return-btn")) return;
 
@@ -765,7 +749,6 @@
       dispatchMessage(text, "outbound");
       outgoingCount++;
       
-      // DEEP FLUSH EDITABLE CONTAINER TO ELIMINATE STUCK TEXT
       while (visualDisplay.firstChild) {
         visualDisplay.removeChild(visualDisplay.firstChild);
       }
@@ -774,7 +757,6 @@
       const sel = window.getSelection();
       if (sel) sel.removeAllRanges();
 
-      // Trigger native input event so layout state updates immediately
       visualDisplay.dispatchEvent(new Event('input', { bubbles: true }));
 
       updateSendButton();
@@ -795,7 +777,6 @@
       }
     }
 
-    // DISPATCH & EDIT MESSAGES
     function dispatchMessage(text, vector) {
       const row = document.createElement("div");
       row.className = `msg-row ${vector}-align`;
