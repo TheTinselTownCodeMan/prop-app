@@ -523,7 +523,7 @@
     let isKbdHidden = false;
 
     const chatTimeline = document.getElementById("chat-timeline");
-    const visualDisplay = document.getElementById("visual-display");
+    let visualDisplay = document.getElementById("visual-display");
     const actionTrigger = document.getElementById("action-trigger");
     const typingMonitor = document.getElementById("typing-monitor");
     const bottomDeck = document.getElementById("interactive-bottom-deck");
@@ -531,19 +531,42 @@
     const alphaLayout = document.getElementById("alpha-layout");
     const numLayout = document.getElementById("num-layout");
 
-    visualDisplay.addEventListener("focus", (e) => {
-      visualDisplay.setAttribute("inputmode", "none");
-    });
+    // ATTACH INPUT LISTENERS & CLEANUP ON INPUT BOX
+    function attachInputListeners(el) {
+      el.addEventListener("focus", () => {
+        el.setAttribute("inputmode", "none");
+      });
+
+      el.addEventListener("click", () => {
+        if (isKbdHidden) openKeyboard();
+      });
+
+      el.addEventListener("input", updateSendButton);
+    }
+
+    attachInputListeners(visualDisplay);
+
+    // DEEP CLEAN RESET TO WIPE ALL STUCK HIDDEN DOM NODES
+    function forceClearInput() {
+      const parent = visualDisplay.parentNode;
+      const newDisplay = document.createElement("div");
+      newDisplay.id = "visual-display";
+      newDisplay.contentEditable = "true";
+      newDisplay.spellcheck = false;
+      
+      parent.replaceChild(newDisplay, visualDisplay);
+      visualDisplay = newDisplay;
+      attachInputListeners(visualDisplay);
+
+      const sel = window.getSelection();
+      if (sel) sel.removeAllRanges();
+
+      updateSendButton();
+    }
 
     document.addEventListener('touchstart', function(e) {
       if (e.touches.length === 3) {
         resetScene();
-      }
-    });
-
-    visualDisplay.addEventListener("click", (e) => {
-      if (isKbdHidden) {
-        openKeyboard();
       }
     });
 
@@ -596,7 +619,6 @@
       lastTouchY = touchCurrentY;
       lastTouchTime = now;
 
-      // Only drag keyboard down if user is at the top/bottom boundary limits
       const isAtMaxScroll = (chatTimeline.scrollTop + chatTimeline.clientHeight >= chatTimeline.scrollHeight - 2);
       
       if (deltaY > 0 && (isAtMaxScroll || initialScrollTop >= chatTimeline.scrollHeight - chatTimeline.clientHeight)) {
@@ -651,7 +673,7 @@
     function insertAtCursor(text) {
       visualDisplay.focus();
       const sel = window.getSelection();
-      if (sel.rangeCount > 0) {
+      if (sel && sel.rangeCount > 0) {
         const range = sel.getRangeAt(0);
         range.deleteContents();
         const textNode = document.createTextNode(text);
@@ -669,7 +691,7 @@
     function deleteAtCursor() {
       visualDisplay.focus();
       const sel = window.getSelection();
-      if (sel.rangeCount > 0) {
+      if (sel && sel.rangeCount > 0) {
         const range = sel.getRangeAt(0);
         if (!range.collapsed) {
           range.deleteContents();
@@ -718,8 +740,6 @@
       key.addEventListener("mouseleave", handlePressEnd);
     });
 
-    visualDisplay.addEventListener("input", updateSendButton);
-
     function showKeyPopup(keyElement, charLabel) {
       const popup = document.createElement("div");
       popup.className = "key-popup";
@@ -732,7 +752,7 @@
     }
 
     function updateSendButton() {
-      const text = visualDisplay.textContent.trim();
+      const text = (visualDisplay.textContent || "").trim();
       if (text.length > 0) {
         actionTrigger.classList.add("ready");
       } else {
@@ -743,23 +763,16 @@
     actionTrigger.addEventListener("click", handleSend);
 
     function handleSend() {
-      const text = visualDisplay.textContent.trim();
+      const rawText = visualDisplay.textContent || "";
+      const text = rawText.trim();
       if (text.length === 0) return;
 
       dispatchMessage(text, "outbound");
       outgoingCount++;
       
-      while (visualDisplay.firstChild) {
-        visualDisplay.removeChild(visualDisplay.firstChild);
-      }
-      visualDisplay.innerText = "";
-      
-      const sel = window.getSelection();
-      if (sel) sel.removeAllRanges();
+      // REPLACE THE INPUT ELEMENT ENTIRELY SO NO PHANTOM DOM NODES REMAIN
+      forceClearInput();
 
-      visualDisplay.dispatchEvent(new Event('input', { bubbles: true }));
-
-      updateSendButton();
       checkAndTriggerReply();
     }
 
@@ -805,15 +818,8 @@
 
     function resetScene() {
       outgoingCount = 0;
-      while (visualDisplay.firstChild) {
-        visualDisplay.removeChild(visualDisplay.firstChild);
-      }
-      visualDisplay.innerText = "";
-      const sel = window.getSelection();
-      if (sel) sel.removeAllRanges();
-      
+      forceClearInput();
       chatTimeline.innerHTML = "";
-      updateSendButton();
       typingMonitor.style.display = "none";
       openKeyboard();
     }
