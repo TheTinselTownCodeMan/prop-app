@@ -125,7 +125,6 @@
       flex: 1;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
       overflow: hidden;
       position: relative;
       height: 100%;
@@ -133,7 +132,7 @@
 
     /* TIMELINE */
     #chat-timeline {
-      flex: 1;
+      flex: 1 1 auto;
       padding: 12px 16px;
       overflow-y: auto;
       display: flex;
@@ -301,6 +300,7 @@
       margin-left: 16px;
       margin-bottom: 8px;
       border: 1px solid #2d2d3a;
+      flex-shrink: 0;
     }
 
     .pulse-dot {
@@ -321,20 +321,27 @@
       50% { opacity: 1; transform: scale(1.2); }
     }
 
-    /* FOOTER INPUT BAR & KEYBOARD DECK */
-    #interactive-bottom-deck {
+    /* BOTTOM CONTAINER FOR BOTH DECK AND KEYBOARD DISPLACEMENT */
+    #bottom-deck-wrapper {
       display: flex;
       flex-direction: column;
       width: 100%;
       position: relative;
       flex-shrink: 0;
       z-index: 50;
-      transform: translateY(0px);
-      will-change: transform;
+      margin-bottom: 0px;
+      transition: margin-bottom 0s;
     }
 
-    #interactive-bottom-deck.animate-slide {
-      transition: transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1);
+    #bottom-deck-wrapper.animate-slide {
+      transition: margin-bottom 0.25s cubic-bezier(0.2, 0.9, 0.3, 1);
+    }
+
+    #interactive-bottom-deck {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      position: relative;
     }
 
     #footer-bar {
@@ -376,7 +383,6 @@
       -webkit-user-select: text;
     }
 
-    /* UPDATED PLACEHOLDER TEXT */
     #visual-display:empty:before {
       content: 'Message';
       color: #53535d;
@@ -562,96 +568,98 @@
         <span class="pulse-dot"></span>
       </div>
 
-      <!-- Combined Sliding Deck (Input Bar + Keyboard) -->
-      <div id="interactive-bottom-deck">
-        <div id="footer-bar">
-          <div class="input-container">
-            <div id="visual-display" contenteditable="true" spellcheck="false"></div>
-            <button id="action-trigger" aria-label="Send">
-              <svg viewBox="0 0 24 24">
-                <path d="M12 3L12 21M12 3L5 10M12 3L19 10" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <div id="custom-keyboard">
-          <div class="kbd-keys-wrapper">
-            <!-- ALPHA LAYOUT -->
-            <div id="alpha-layout" style="display: flex; flex-direction: column; gap: 10px; width: 100%; overflow: visible;">
-              <div class="kbd-row">
-                <div class="key" data-char="q">q</div><div class="key" data-char="w">w</div>
-                <div class="key" data-char="e">e</div><div class="key" data-char="r">r</div>
-                <div class="key" data-char="t">t</div><div class="key" data-char="y">y</div>
-                <div class="key" data-char="u">u</div><div class="key" data-char="i">i</div>
-                <div class="key" data-char="o">o</div><div class="key" data-char="p">p</div>
-              </div>
-              <div class="kbd-row" style="padding: 0 12px;">
-                <div class="key" data-char="a">a</div><div class="key" data-char="s">s</div>
-                <div class="key" data-char="d">d</div><div class="key" data-char="f">f</div>
-                <div class="key" data-char="g">g</div><div class="key" data-char="h">h</div>
-                <div class="key" data-char="j">j</div><div class="key" data-char="k">k</div>
-                <div class="key" data-char="l">l</div>
-              </div>
-              <div class="kbd-row">
-                <div class="key key-special key-icon">
-                  <svg viewBox="0 0 24 24"><path d="M12 3L4 12h5v8h6v-8h5z"/></svg>
-                </div>
-                <div class="key" data-char="z">z</div><div class="key" data-char="x">x</div>
-                <div class="key" data-char="c">c</div><div class="key" data-char="v">v</div>
-                <div class="key" data-char="b">b</div><div class="key" data-char="n">n</div>
-                <div class="key" data-char="m">m</div>
-                <div class="key key-special key-icon backspace-btn">
-                  <svg viewBox="0 0 24 24"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"/></svg>
-                </div>
-              </div>
-              <div class="kbd-row">
-                <div class="key key-special mode-toggle">123</div>
-                <div class="key key-special key-icon">
-                  <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
-                </div>
-                <div class="key key-space" data-char=" ">space</div>
-                <div class="key key-special return-btn">return</div>
-                <div class="key key-special key-icon mic-toggle">
-                  <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.49 6-3.31 6-6.72h-1.7z"/></svg>
-                </div>
-              </div>
+      <!-- Combined Sliding Deck Wrapper -->
+      <div id="bottom-deck-wrapper">
+        <div id="interactive-bottom-deck">
+          <div id="footer-bar">
+            <div class="input-container">
+              <div id="visual-display" contenteditable="true" spellcheck="false"></div>
+              <button id="action-trigger" aria-label="Send">
+                <svg viewBox="0 0 24 24">
+                  <path d="M12 3L12 21M12 3L5 10M12 3L19 10" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
             </div>
+          </div>
 
-            <!-- NUMERIC / SYMBOL LAYOUT -->
-            <div id="num-layout" style="display: none; flex-direction: column; gap: 10px; width: 100%; overflow: visible;">
-              <div class="kbd-row">
-                <div class="key" data-char="1">1</div><div class="key" data-char="2">2</div>
-                <div class="key" data-char="3">3</div><div class="key" data-char="4">4</div>
-                <div class="key" data-char="5">5</div><div class="key" data-char="6">6</div>
-                <div class="key" data-char="7">7</div><div class="key" data-char="8">8</div>
-                <div class="key" data-char="9">9</div><div class="key" data-char="0">0</div>
-              </div>
-              <div class="kbd-row">
-                <div class="key" data-char="-">-</div><div class="key" data-char="/">/</div>
-                <div class="key" data-char=":">:</div><div class="key" data-char=";">;</div>
-                <div class="key" data-char="(">(</div><div class="key" data-char=")">)</div>
-                <div class="key" data-char="$">$</div><div class="key" data-char="&">&</div>
-                <div class="key" data-char="@">@</div><div class="key" data-char='"'>"</div>
-              </div>
-              <div class="kbd-row">
-                <div class="key" data-char=".">.</div><div class="key" data-char=",">,</div>
-                <div class="key" data-char="?">?</div><div class="key" data-char="!">!</div>
-                <div class="key" data-char="'">'</div><div class="key" data-char="#">#</div>
-                <div class="key" data-char="%">%</div><div class="key" data-char="*">*</div>
-                <div class="key key-special key-icon backspace-btn">
-                  <svg viewBox="0 0 24 24"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"/></svg>
+          <div id="custom-keyboard">
+            <div class="kbd-keys-wrapper">
+              <!-- ALPHA LAYOUT -->
+              <div id="alpha-layout" style="display: flex; flex-direction: column; gap: 10px; width: 100%; overflow: visible;">
+                <div class="kbd-row">
+                  <div class="key" data-char="q">q</div><div class="key" data-char="w">w</div>
+                  <div class="key" data-char="e">e</div><div class="key" data-char="r">r</div>
+                  <div class="key" data-char="t">t</div><div class="key" data-char="y">y</div>
+                  <div class="key" data-char="u">u</div><div class="key" data-char="i">i</div>
+                  <div class="key" data-char="o">o</div><div class="key" data-char="p">p</div>
+                </div>
+                <div class="kbd-row" style="padding: 0 12px;">
+                  <div class="key" data-char="a">a</div><div class="key" data-char="s">s</div>
+                  <div class="key" data-char="d">d</div><div class="key" data-char="f">f</div>
+                  <div class="key" data-char="g">g</div><div class="key" data-char="h">h</div>
+                  <div class="key" data-char="j">j</div><div class="key" data-char="k">k</div>
+                  <div class="key" data-char="l">l</div>
+                </div>
+                <div class="kbd-row">
+                  <div class="key key-special key-icon">
+                    <svg viewBox="0 0 24 24"><path d="M12 3L4 12h5v8h6v-8h5z"/></svg>
+                  </div>
+                  <div class="key" data-char="z">z</div><div class="key" data-char="x">x</div>
+                  <div class="key" data-char="c">c</div><div class="key" data-char="v">v</div>
+                  <div class="key" data-char="b">b</div><div class="key" data-char="n">n</div>
+                  <div class="key" data-char="m">m</div>
+                  <div class="key key-special key-icon backspace-btn">
+                    <svg viewBox="0 0 24 24"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"/></svg>
+                  </div>
+                </div>
+                <div class="kbd-row">
+                  <div class="key key-special mode-toggle">123</div>
+                  <div class="key key-special key-icon">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
+                  </div>
+                  <div class="key key-space" data-char=" ">space</div>
+                  <div class="key key-special return-btn">return</div>
+                  <div class="key key-special key-icon mic-toggle">
+                    <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.49 6-3.31 6-6.72h-1.7z"/></svg>
+                  </div>
                 </div>
               </div>
-              <div class="kbd-row">
-                <div class="key key-special mode-toggle">ABC</div>
-                <div class="key key-special key-icon">
-                  <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
+
+              <!-- NUMERIC / SYMBOL LAYOUT -->
+              <div id="num-layout" style="display: none; flex-direction: column; gap: 10px; width: 100%; overflow: visible;">
+                <div class="kbd-row">
+                  <div class="key" data-char="1">1</div><div class="key" data-char="2">2</div>
+                  <div class="key" data-char="3">3</div><div class="key" data-char="4">4</div>
+                  <div class="key" data-char="5">5</div><div class="key" data-char="6">6</div>
+                  <div class="key" data-char="7">7</div><div class="key" data-char="8">8</div>
+                  <div class="key" data-char="9">9</div><div class="key" data-char="0">0</div>
                 </div>
-                <div class="key key-space" data-char=" ">space</div>
-                <div class="key key-special return-btn">return</div>
-                <div class="key key-special key-icon mic-toggle">
-                  <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.49 6-3.31 6-6.72h-1.7z"/></svg>
+                <div class="kbd-row">
+                  <div class="key" data-char="-">-</div><div class="key" data-char="/">/</div>
+                  <div class="key" data-char=":">:</div><div class="key" data-char=";">;</div>
+                  <div class="key" data-char="(">(</div><div class="key" data-char=")">)</div>
+                  <div class="key" data-char="$">$</div><div class="key" data-char="&">&</div>
+                  <div class="key" data-char="@">@</div><div class="key" data-char='"'>"</div>
+                </div>
+                <div class="kbd-row">
+                  <div class="key" data-char=".">.</div><div class="key" data-char=",">,</div>
+                  <div class="key" data-char="?">?</div><div class="key" data-char="!">!</div>
+                  <div class="key" data-char="'">'</div><div class="key" data-char="#">#</div>
+                  <div class="key" data-char="%">%</div><div class="key" data-char="*">*</div>
+                  <div class="key key-special key-icon backspace-btn">
+                    <svg viewBox="0 0 24 24"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"/></svg>
+                  </div>
+                </div>
+                <div class="kbd-row">
+                  <div class="key key-special mode-toggle">ABC</div>
+                  <div class="key key-special key-icon">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
+                  </div>
+                  <div class="key key-space" data-char=" ">space</div>
+                  <div class="key key-special return-btn">return</div>
+                  <div class="key key-special key-icon mic-toggle">
+                    <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.49 6-3.31 6-6.72h-1.7z"/></svg>
+                  </div>
                 </div>
               </div>
             </div>
@@ -682,13 +690,12 @@
     let visualDisplay = document.getElementById("visual-display");
     const actionTrigger = document.getElementById("action-trigger");
     const typingMonitor = document.getElementById("typing-monitor");
-    const bottomDeck = document.getElementById("interactive-bottom-deck");
+    const deckWrapper = document.getElementById("bottom-deck-wrapper");
     const customKeyboard = document.getElementById("custom-keyboard");
     const alphaLayout = document.getElementById("alpha-layout");
     const numLayout = document.getElementById("num-layout");
     const tapbackOverlay = document.getElementById("tapback-overlay");
 
-    // WEB AUDIO SYNTHESIZER FOR IMESSAGE SOUNDS
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     
     function playSound(type) {
@@ -731,7 +738,6 @@
       else if (type === 'double') navigator.vibrate([15, 30, 15]);
     }
 
-    // INPUT LISTENERS & FOCUS MANAGEMENT
     function attachInputListeners(el) {
       el.addEventListener("focus", () => {
         el.setAttribute("inputmode", "none");
@@ -785,8 +791,8 @@
 
     function openKeyboard() {
       isKbdHidden = false;
-      bottomDeck.classList.add("animate-slide");
-      bottomDeck.style.transform = `translateY(0px)`;
+      deckWrapper.classList.add("animate-slide");
+      deckWrapper.style.marginBottom = `0px`;
       visualDisplay.focus();
       updateSendButton();
       chatTimeline.scrollTop = chatTimeline.scrollHeight;
@@ -795,16 +801,16 @@
     function hideKeyboard() {
       isKbdHidden = true;
       const keyboardHeight = customKeyboard.offsetHeight;
-      bottomDeck.classList.add("animate-slide");
-      bottomDeck.style.transform = `translateY(${keyboardHeight}px)`;
+      deckWrapper.classList.add("animate-slide");
+      deckWrapper.style.marginBottom = `-${keyboardHeight}px`;
       visualDisplay.blur();
       updateSendButton();
       chatTimeline.scrollTop = chatTimeline.scrollHeight;
     }
 
-    // INTERACTIVE THUMB DRAG LOGIC (1:1 MOVEMENT)
+    // GAPLESS 1:1 DRAG DISMISS
     let touchStartY = 0;
-    let initialTranslateY = 0;
+    let initialMargin = 0;
     let isDragging = false;
     let lastTouchY = 0;
     let touchTime = 0;
@@ -815,12 +821,10 @@
       lastTouchY = touchStartY;
       touchTime = Date.now();
       
-      // Calculate current offset relative to deck
-      const style = window.getComputedStyle(bottomDeck);
-      const matrix = new WebKitCSSMatrix(style.transform);
-      initialTranslateY = matrix.m41; // Y axis offset
+      const style = window.getComputedStyle(deckWrapper);
+      initialMargin = parseFloat(style.marginBottom) || 0;
       
-      bottomDeck.classList.remove("animate-slide");
+      deckWrapper.classList.remove("animate-slide");
       isDragging = true;
     }, { passive: true });
 
@@ -831,20 +835,18 @@
       const deltaY = currentY - touchStartY;
       const now = Date.now();
 
-      // Velocity calculation
       velocity = (currentY - lastTouchY) / (now - touchTime || 1);
       lastTouchY = currentY;
       touchTime = now;
 
-      // Only pull down if currently open or dragging downwards
-      let newTranslateY = initialTranslateY + deltaY;
       const maxDismiss = customKeyboard.offsetHeight;
+      let newMargin = initialMargin - deltaY;
 
-      // Restrict drag boundaries
-      if (newTranslateY < 0) newTranslateY = 0; 
-      if (newTranslateY > maxDismiss) newTranslateY = maxDismiss;
+      if (newMargin > 0) newMargin = 0; 
+      if (newMargin < -maxDismiss) newMargin = -maxDismiss;
 
-      bottomDeck.style.transform = `translateY(${newTranslateY}px)`;
+      deckWrapper.style.marginBottom = `${newMargin}px`;
+      chatTimeline.scrollTop = chatTimeline.scrollHeight;
     }, { passive: true });
 
     chatTimeline.addEventListener("touchend", () => {
@@ -852,12 +854,10 @@
       isDragging = false;
 
       const maxDismiss = customKeyboard.offsetHeight;
-      const style = window.getComputedStyle(bottomDeck);
-      const matrix = new WebKitCSSMatrix(style.transform);
-      const currentTranslateY = matrix.m41;
+      const style = window.getComputedStyle(deckWrapper);
+      const currentMargin = parseFloat(style.marginBottom) || 0;
 
-      // Dismiss if dragged down past 40% or flicked downward quickly
-      if (currentTranslateY > maxDismiss * 0.4 || velocity > 0.5) {
+      if (currentMargin < -(maxDismiss * 0.4) || velocity > 0.5) {
         hideKeyboard();
       } else {
         openKeyboard();
@@ -1052,7 +1052,6 @@
     }
 
     function dispatchMessage(text, vector) {
-      // CLEAR TAILS FROM PREVIOUS MESSAGES IN SAME GROUP
       const previousRows = chatTimeline.querySelectorAll(`.msg-row.${vector}-align`);
       if (previousRows.length > 0) {
         const lastBox = previousRows[previousRows.length - 1].querySelector('.msg-box');
@@ -1066,7 +1065,6 @@
       box.className = `msg-box msg-${vector} has-tail`;
       box.textContent = text;
 
-      // TAPBACK & EDIT LISTENERS
       let pressTimer;
       box.addEventListener("touchstart", () => {
         pressTimer = setTimeout(() => showTapback(box), 500);
