@@ -125,9 +125,10 @@
       flex: 1;
       display: flex;
       flex-direction: column;
-      justify-content: flex-end;
+      justify-content: space-between;
       overflow: hidden;
       position: relative;
+      height: 100%;
     }
 
     /* TIMELINE */
@@ -200,8 +201,9 @@
       position: absolute;
       bottom: 0;
       left: -6px;
-      width: 10px;
+      width: 100px;
       height: 10px;
+      width: 10px;
       background-color: var(--bubble-inbound);
       border-left: 1px solid #2d2d3a;
       border-bottom: 1px solid #2d2d3a;
@@ -325,18 +327,14 @@
       flex-direction: column;
       width: 100%;
       position: relative;
-      transform: translateY(0);
-      will-change: transform;
+      flex-shrink: 0;
       z-index: 5;
-    }
-
-    #interactive-bottom-deck.animating {
-      transition: transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1);
     }
 
     #footer-bar {
       border-top: 0.5px solid var(--border-color);
       padding: 8px 12px;
+      padding-bottom: max(8px, env(safe-area-inset-bottom));
       background: #121216;
       width: 100%;
     }
@@ -408,6 +406,19 @@
       flex-shrink: 0;
       position: relative;
       border-top: 1px solid #1a1a24;
+      max-height: 300px;
+      overflow: hidden;
+      transition: max-height 0.25s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.2s ease;
+      opacity: 1;
+    }
+
+    /* KEYBOARD HIDDEN COLLAPSED STATE */
+    .keyboard-hidden #custom-keyboard {
+      max-height: 0px !important;
+      padding-bottom: 0px !important;
+      border-top: none !important;
+      opacity: 0;
+      pointer-events: none;
     }
 
     .kbd-keys-wrapper {
@@ -656,6 +667,7 @@
     let activeTapbackTarget = null;
     let lastOutboundStampEl = null;
 
+    const chatView = document.getElementById("chat-view");
     const chatTimeline = document.getElementById("chat-timeline");
     let visualDisplay = document.getElementById("visual-display");
     const actionTrigger = document.getElementById("action-trigger");
@@ -763,19 +775,18 @@
 
     function openKeyboard() {
       isKbdHidden = false;
-      bottomDeck.classList.add("animating");
-      bottomDeck.style.transform = "translateY(0px)";
+      chatView.classList.remove("keyboard-hidden");
       visualDisplay.focus();
       updateSendButton();
+      chatTimeline.scrollTop = chatTimeline.scrollHeight;
     }
 
     function hideKeyboard() {
       isKbdHidden = true;
-      bottomDeck.classList.add("animating");
-      const keysHeight = customKeyboard.querySelector('.kbd-keys-wrapper').offsetHeight;
-      bottomDeck.style.transform = `translateY(${keysHeight}px)`;
+      chatView.classList.add("keyboard-hidden");
       visualDisplay.blur();
       updateSendButton();
+      chatTimeline.scrollTop = chatTimeline.scrollHeight;
     }
 
     // TAPBACK REACTION LOGIC
@@ -804,54 +815,17 @@
     // SWIPE TIMELINE TO HIDE KEYBOARD
     let touchStartY = 0;
     let touchCurrentY = 0;
-    let isDraggingDeck = false;
-    let initialScrollTop = 0;
-    let lastTouchY = 0;
-    let lastTouchTime = 0;
-    let dragVelocity = 0;
 
     chatTimeline.addEventListener("touchstart", (e) => {
-      if (isKbdHidden) return;
       touchStartY = e.touches[0].clientY;
-      lastTouchY = touchStartY;
-      lastTouchTime = Date.now();
-      initialScrollTop = chatTimeline.scrollTop;
-      isDraggingDeck = false;
-      bottomDeck.classList.remove("animating");
     }, { passive: true });
 
     chatTimeline.addEventListener("touchmove", (e) => {
-      if (isKbdHidden) return;
       touchCurrentY = e.touches[0].clientY;
       const deltaY = touchCurrentY - touchStartY;
 
-      const now = Date.now();
-      const dt = now - lastTouchTime;
-      if (dt > 0) {
-        dragVelocity = (touchCurrentY - lastTouchY) / dt;
-      }
-      lastTouchY = touchCurrentY;
-      lastTouchTime = now;
-
-      const isAtMaxScroll = (chatTimeline.scrollTop + chatTimeline.clientHeight >= chatTimeline.scrollHeight - 2);
-      
-      if (deltaY > 0 && (isAtMaxScroll || initialScrollTop >= chatTimeline.scrollHeight - chatTimeline.clientHeight)) {
-        isDraggingDeck = true;
-        bottomDeck.style.transform = `translateY(${deltaY}px)`;
-      }
-    }, { passive: true });
-
-    chatTimeline.addEventListener("touchend", () => {
-      if (!isDraggingDeck || isKbdHidden) return;
-      isDraggingDeck = false;
-      const deltaY = touchCurrentY - touchStartY;
-
-      bottomDeck.classList.add("animating");
-
-      if (deltaY > 70 || dragVelocity > 0.4) {
+      if (deltaY > 40 && !isKbdHidden) {
         hideKeyboard();
-      } else {
-        openKeyboard();
       }
     }, { passive: true });
 
