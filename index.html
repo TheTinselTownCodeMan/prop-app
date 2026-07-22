@@ -74,7 +74,7 @@
       background: transparent;
     }
 
-    /* REALISTIC IMESSAGE HEADER */
+    /* HEADER */
     #app-header {
       min-height: 50px;
       background-color: rgba(18, 18, 22, 0.85);
@@ -120,20 +120,14 @@
       color: #8e8e93;
     }
 
-    /* SLIDING CONTAINER (SLIDES CHAT BUBBLES + KEYBOARD TOGETHER) */
-    #sliding-chat-view {
+    /* CHAT VIEW CONTAINER */
+    #chat-view {
       flex: 1;
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
       overflow: hidden;
       position: relative;
-      transform: translateY(0);
-      will-change: transform;
-    }
-
-    #sliding-chat-view.animating {
-      transition: transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1);
     }
 
     /* TIMELINE */
@@ -147,6 +141,7 @@
       width: 100%;
       -webkit-overflow-scrolling: touch;
       touch-action: pan-y;
+      transition: padding-bottom 0.05s linear;
     }
 
     .msg-row { display: flex; flex-direction: column; max-width: 78%; }
@@ -212,7 +207,21 @@
       50% { opacity: 1; transform: scale(1.2); }
     }
 
-    /* FOOTER INPUT BAR */
+    /* FOOTER INPUT BAR & KEYBOARD CONTAINER */
+    #interactive-bottom-deck {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      position: relative;
+      transform: translateY(0);
+      will-change: transform;
+      z-index: 5;
+    }
+
+    #interactive-bottom-deck.animating {
+      transition: transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1);
+    }
+
     #footer-bar {
       border-top: 0.5px solid var(--border-color);
       padding: 10px 12px;
@@ -242,8 +251,9 @@
       -webkit-user-select: text;
     }
 
+    /* NEUTRAL PLACEHOLDER TEXT */
     #visual-display:empty:before {
-      content: 'iMessage';
+      content: 'Message';
       color: #53535d;
       text-shadow: none;
     }
@@ -271,7 +281,6 @@
       box-shadow: 0 0 10px rgba(11, 132, 254, 0.6);
     }
 
-    /* COMBINED INPUT BAR + KEYBOARD WRAPPER */
     #custom-keyboard {
       background-color: var(--kbd-bg);
       padding-bottom: max(14px, env(safe-area-inset-bottom));
@@ -280,7 +289,6 @@
       flex-shrink: 0;
       position: relative;
       border-top: 1px solid #1a1a24;
-      z-index: 2;
     }
 
     .kbd-keys-wrapper {
@@ -391,8 +399,8 @@
       <div style="width: 20px;"></div>
     </div>
 
-    <!-- Sliding View (Bubbles + Keyboard Shift Together) -->
-    <div id="sliding-chat-view">
+    <!-- Main Chat Container -->
+    <div id="chat-view">
       <!-- Chat Timeline -->
       <div id="chat-timeline"></div>
 
@@ -403,9 +411,8 @@
         <span class="pulse-dot"></span>
       </div>
 
-      <!-- Combined Input Bar + Keyboard Container -->
-      <div id="custom-keyboard">
-        <!-- Footer Input Bar attached to top of keyboard -->
+      <!-- Combined Sliding Deck (Input Bar + Keyboard) -->
+      <div id="interactive-bottom-deck">
         <div id="footer-bar">
           <div class="input-container">
             <div id="visual-display" contenteditable="true" spellcheck="false"></div>
@@ -417,82 +424,84 @@
           </div>
         </div>
 
-        <div class="kbd-keys-wrapper">
-          <!-- ALPHA LAYOUT -->
-          <div id="alpha-layout" style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
-            <div class="kbd-row">
-              <div class="key" data-char="q">q</div><div class="key" data-char="w">w</div>
-              <div class="key" data-char="e">e</div><div class="key" data-char="r">r</div>
-              <div class="key" data-char="t">t</div><div class="key" data-char="y">y</div>
-              <div class="key" data-char="u">u</div><div class="key" data-char="i">i</div>
-              <div class="key" data-char="o">o</div><div class="key" data-char="p">p</div>
-            </div>
-            <div class="kbd-row" style="padding: 0 12px;">
-              <div class="key" data-char="a">a</div><div class="key" data-char="s">s</div>
-              <div class="key" data-char="d">d</div><div class="key" data-char="f">f</div>
-              <div class="key" data-char="g">g</div><div class="key" data-char="h">h</div>
-              <div class="key" data-char="j">j</div><div class="key" data-char="k">k</div>
-              <div class="key" data-char="l">l</div>
-            </div>
-            <div class="kbd-row">
-              <div class="key key-special key-icon">
-                <svg viewBox="0 0 24 24"><path d="M12 3L4 12h5v8h6v-8h5z"/></svg>
+        <div id="custom-keyboard">
+          <div class="kbd-keys-wrapper">
+            <!-- ALPHA LAYOUT -->
+            <div id="alpha-layout" style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+              <div class="kbd-row">
+                <div class="key" data-char="q">q</div><div class="key" data-char="w">w</div>
+                <div class="key" data-char="e">e</div><div class="key" data-char="r">r</div>
+                <div class="key" data-char="t">t</div><div class="key" data-char="y">y</div>
+                <div class="key" data-char="u">u</div><div class="key" data-char="i">i</div>
+                <div class="key" data-char="o">o</div><div class="key" data-char="p">p</div>
               </div>
-              <div class="key" data-char="z">z</div><div class="key" data-char="x">x</div>
-              <div class="key" data-char="c">c</div><div class="key" data-char="v">v</div>
-              <div class="key" data-char="b">b</div><div class="key" data-char="n">n</div>
-              <div class="key" data-char="m">m</div>
-              <div class="key key-special key-icon backspace-btn">
-                <svg viewBox="0 0 24 24"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"/></svg>
+              <div class="kbd-row" style="padding: 0 12px;">
+                <div class="key" data-char="a">a</div><div class="key" data-char="s">s</div>
+                <div class="key" data-char="d">d</div><div class="key" data-char="f">f</div>
+                <div class="key" data-char="g">g</div><div class="key" data-char="h">h</div>
+                <div class="key" data-char="j">j</div><div class="key" data-char="k">k</div>
+                <div class="key" data-char="l">l</div>
+              </div>
+              <div class="kbd-row">
+                <div class="key key-special key-icon">
+                  <svg viewBox="0 0 24 24"><path d="M12 3L4 12h5v8h6v-8h5z"/></svg>
+                </div>
+                <div class="key" data-char="z">z</div><div class="key" data-char="x">x</div>
+                <div class="key" data-char="c">c</div><div class="key" data-char="v">v</div>
+                <div class="key" data-char="b">b</div><div class="key" data-char="n">n</div>
+                <div class="key" data-char="m">m</div>
+                <div class="key key-special key-icon backspace-btn">
+                  <svg viewBox="0 0 24 24"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"/></svg>
+                </div>
+              </div>
+              <div class="kbd-row">
+                <div class="key key-special mode-toggle">123</div>
+                <div class="key key-special key-icon">
+                  <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
+                </div>
+                <div class="key key-space" data-char=" ">space</div>
+                <div class="key key-special return-btn">return</div>
+                <div class="key key-special key-icon mic-toggle">
+                  <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.49 6-3.31 6-6.72h-1.7z"/></svg>
+                </div>
               </div>
             </div>
-            <div class="kbd-row">
-              <div class="key key-special mode-toggle">123</div>
-              <div class="key key-special key-icon">
-                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
-              </div>
-              <div class="key key-space" data-char=" ">space</div>
-              <div class="key key-special return-btn">return</div>
-              <div class="key key-special key-icon mic-toggle">
-                <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.49 6-3.31 6-6.72h-1.7z"/></svg>
-              </div>
-            </div>
-          </div>
 
-          <!-- NUMERIC / SYMBOL LAYOUT -->
-          <div id="num-layout" style="display: none; flex-direction: column; gap: 10px; width: 100%;">
-            <div class="kbd-row">
-              <div class="key" data-char="1">1</div><div class="key" data-char="2">2</div>
-              <div class="key" data-char="3">3</div><div class="key" data-char="4">4</div>
-              <div class="key" data-char="5">5</div><div class="key" data-char="6">6</div>
-              <div class="key" data-char="7">7</div><div class="key" data-char="8">8</div>
-              <div class="key" data-char="9">9</div><div class="key" data-char="0">0</div>
-            </div>
-            <div class="kbd-row">
-              <div class="key" data-char="-">-</div><div class="key" data-char="/">/</div>
-              <div class="key" data-char=":">:</div><div class="key" data-char=";">;</div>
-              <div class="key" data-char="(">(</div><div class="key" data-char=")">)</div>
-              <div class="key" data-char="$">$</div><div class="key" data-char="&">&</div>
-              <div class="key" data-char="@">@</div><div class="key" data-char='"'>"</div>
-            </div>
-            <div class="kbd-row">
-              <div class="key" data-char=".">.</div><div class="key" data-char=",">,</div>
-              <div class="key" data-char="?">?</div><div class="key" data-char="!">!</div>
-              <div class="key" data-char="'">'</div><div class="key" data-char="#">#</div>
-              <div class="key" data-char="%">%</div><div class="key" data-char="*">*</div>
-              <div class="key key-special key-icon backspace-btn">
-                <svg viewBox="0 0 24 24"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"/></svg>
+            <!-- NUMERIC / SYMBOL LAYOUT -->
+            <div id="num-layout" style="display: none; flex-direction: column; gap: 10px; width: 100%;">
+              <div class="kbd-row">
+                <div class="key" data-char="1">1</div><div class="key" data-char="2">2</div>
+                <div class="key" data-char="3">3</div><div class="key" data-char="4">4</div>
+                <div class="key" data-char="5">5</div><div class="key" data-char="6">6</div>
+                <div class="key" data-char="7">7</div><div class="key" data-char="8">8</div>
+                <div class="key" data-char="9">9</div><div class="key" data-char="0">0</div>
               </div>
-            </div>
-            <div class="kbd-row">
-              <div class="key key-special mode-toggle">ABC</div>
-              <div class="key key-special key-icon">
-                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
+              <div class="kbd-row">
+                <div class="key" data-char="-">-</div><div class="key" data-char="/">/</div>
+                <div class="key" data-char=":">:</div><div class="key" data-char=";">;</div>
+                <div class="key" data-char="(">(</div><div class="key" data-char=")">)</div>
+                <div class="key" data-char="$">$</div><div class="key" data-char="&">&</div>
+                <div class="key" data-char="@">@</div><div class="key" data-char='"'>"</div>
               </div>
-              <div class="key key-space" data-char=" ">space</div>
-              <div class="key key-special return-btn">return</div>
-              <div class="key key-special key-icon mic-toggle">
-                <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.49 6-3.31 6-6.72h-1.7z"/></svg>
+              <div class="kbd-row">
+                <div class="key" data-char=".">.</div><div class="key" data-char=",">,</div>
+                <div class="key" data-char="?">?</div><div class="key" data-char="!">!</div>
+                <div class="key" data-char="'">'</div><div class="key" data-char="#">#</div>
+                <div class="key" data-char="%">%</div><div class="key" data-char="*">*</div>
+                <div class="key key-special key-icon backspace-btn">
+                  <svg viewBox="0 0 24 24"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"/></svg>
+                </div>
+              </div>
+              <div class="kbd-row">
+                <div class="key key-special mode-toggle">ABC</div>
+                <div class="key key-special key-icon">
+                  <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
+                </div>
+                <div class="key key-space" data-char=" ">space</div>
+                <div class="key key-special return-btn">return</div>
+                <div class="key key-special key-icon mic-toggle">
+                  <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.49 6-3.31 6-6.72h-1.7z"/></svg>
+                </div>
               </div>
             </div>
           </div>
@@ -515,16 +524,16 @@
     let backspaceInterval = null;
     let isKbdHidden = false;
 
-    const slidingChatView = document.getElementById("sliding-chat-view");
     const chatTimeline = document.getElementById("chat-timeline");
     const visualDisplay = document.getElementById("visual-display");
     const actionTrigger = document.getElementById("action-trigger");
     const typingMonitor = document.getElementById("typing-monitor");
+    const bottomDeck = document.getElementById("interactive-bottom-deck");
     const customKeyboard = document.getElementById("custom-keyboard");
     const alphaLayout = document.getElementById("alpha-layout");
     const numLayout = document.getElementById("num-layout");
 
-    // Prevent system keyboard on mobile touch
+    // Prevent physical mobile browser popup
     visualDisplay.addEventListener("focus", (e) => {
       visualDisplay.setAttribute("inputmode", "none");
     });
@@ -536,7 +545,7 @@
       }
     });
 
-    // OPEN KEYBOARD ON TAP
+    // RE-OPEN KEYBOARD ON DISPLAY TAP
     visualDisplay.addEventListener("click", (e) => {
       if (isKbdHidden) {
         openKeyboard();
@@ -545,22 +554,24 @@
 
     function openKeyboard() {
       isKbdHidden = false;
-      slidingChatView.classList.add("animating");
-      slidingChatView.style.transform = "translateY(0px)";
+      bottomDeck.classList.add("animating");
+      bottomDeck.style.transform = "translateY(0px)";
+      chatTimeline.style.paddingBottom = "12px";
       visualDisplay.focus();
       updateSendButton();
     }
 
     function hideKeyboard() {
       isKbdHidden = true;
-      slidingChatView.classList.add("animating");
+      bottomDeck.classList.add("animating");
       const keysHeight = customKeyboard.querySelector('.kbd-keys-wrapper').offsetHeight;
-      slidingChatView.style.transform = `translateY(${keysHeight}px)`;
+      bottomDeck.style.transform = `translateY(${keysHeight}px)`;
+      chatTimeline.style.paddingBottom = "12px";
       visualDisplay.blur();
       updateSendButton();
     }
 
-    // REAL-TIME THUMB DRAG DISMISSAL
+    // SMOOTH THUMB DRAG DISMISSAL
     let touchStartY = 0;
     let touchCurrentY = 0;
     let isDragging = false;
@@ -574,7 +585,7 @@
       lastTouchY = touchStartY;
       lastTouchTime = Date.now();
       isDragging = true;
-      slidingChatView.classList.remove("animating");
+      bottomDeck.classList.remove("animating");
     }
 
     function handleTouchMove(e) {
@@ -591,9 +602,13 @@
       lastTouchTime = now;
 
       if (deltaY > 0) {
-        slidingChatView.style.transform = `translateY(${deltaY}px)`;
+        bottomDeck.style.transform = `translateY(${deltaY}px)`;
+        // Expand timeline padding naturally as deck lowers so bubbles shift without leaving gaps
+        chatTimeline.style.paddingBottom = `${12 + deltaY}px`;
+        chatTimeline.scrollTop = chatTimeline.scrollHeight;
       } else {
-        slidingChatView.style.transform = `translateY(0px)`;
+        bottomDeck.style.transform = `translateY(0px)`;
+        chatTimeline.style.paddingBottom = "12px";
       }
     }
 
@@ -602,7 +617,7 @@
       isDragging = false;
       const deltaY = touchCurrentY - touchStartY;
 
-      slidingChatView.classList.add("animating");
+      bottomDeck.classList.add("animating");
 
       if (deltaY > 80 || dragVelocity > 0.4) {
         hideKeyboard();
@@ -630,7 +645,7 @@
       });
     });
 
-    // MIC HIDE KEYBOARD
+    // MIC TOGGLE
     document.querySelectorAll(".mic-toggle").forEach(btn => {
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -646,7 +661,7 @@
       });
     });
 
-    // INSERT TEXT AT CURRENT CURSOR POSITION
+    // CURSOR INSERTION
     function insertAtCursor(text) {
       visualDisplay.focus();
       const sel = window.getSelection();
@@ -665,7 +680,7 @@
       updateSendButton();
     }
 
-    // DELETE CHARACTER BEHIND CURSOR
+    // CURSOR DELETION
     function deleteAtCursor() {
       visualDisplay.focus();
       const sel = window.getSelection();
@@ -681,7 +696,7 @@
       updateSendButton();
     }
 
-    // KEYPRESS & HOLD-TO-DELETE BACKSPACE HANDLERS
+    // BACKSPACE & KEY CLICK HANDLERS
     document.querySelectorAll(".key").forEach(key => {
       if (key.classList.contains("mic-toggle") || key.classList.contains("mode-toggle") || key.classList.contains("return-btn")) return;
 
@@ -750,10 +765,17 @@
       dispatchMessage(text, "outbound");
       outgoingCount++;
       
-      // COMPLETELY CLEAR INPUT DISPLAY & SELECTION RANGES TO PREVENT STUCK TEXT
-      visualDisplay.innerHTML = "";
+      // DEEP FLUSH EDITABLE CONTAINER TO ELIMINATE STUCK TEXT
+      while (visualDisplay.firstChild) {
+        visualDisplay.removeChild(visualDisplay.firstChild);
+      }
+      visualDisplay.innerText = "";
+      
       const sel = window.getSelection();
       if (sel) sel.removeAllRanges();
+
+      // Trigger native input event so layout state updates immediately
+      visualDisplay.dispatchEvent(new Event('input', { bubbles: true }));
 
       updateSendButton();
       checkAndTriggerReply();
@@ -773,7 +795,7 @@
       }
     }
 
-    // DISPATCH & TAP-TO-EDIT MESSAGES
+    // DISPATCH & EDIT MESSAGES
     function dispatchMessage(text, vector) {
       const row = document.createElement("div");
       row.className = `msg-row ${vector}-align`;
@@ -802,7 +824,10 @@
 
     function resetScene() {
       outgoingCount = 0;
-      visualDisplay.innerHTML = "";
+      while (visualDisplay.firstChild) {
+        visualDisplay.removeChild(visualDisplay.firstChild);
+      }
+      visualDisplay.innerText = "";
       const sel = window.getSelection();
       if (sel) sel.removeAllRanges();
       
