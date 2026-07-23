@@ -17,7 +17,6 @@
       /* Holographic Cyan & Blue Accents */
       --holo-cyan: #00f3ff;
       --holo-blue: #0b84fe;
-      --holo-magenta: #ff00ff;
       
       /* Glowing Multi-layer Shadows */
       --neon-glow-cyan: 0 0 10px rgba(0, 243, 255, 0.6), 0 0 20px rgba(0, 243, 255, 0.3), inset 0 0 8px rgba(0, 243, 255, 0.4);
@@ -79,7 +78,7 @@
       background: transparent;
     }
 
-    /* HEADER - Glass Holo */
+    /* HEADER */
     #app-header {
       min-height: 50px;
       background: var(--header-bg);
@@ -166,7 +165,6 @@
       transform: scale(0.96) translateZ(-5px);
     }
 
-    /* Inbound - Dark Glass & Cyan Edge Glow */
     .msg-inbound {
       background: var(--holo-glass-bg);
       color: #ffffff;
@@ -177,7 +175,6 @@
         0 0 12px rgba(0, 243, 255, 0.25);
     }
 
-    /* Outbound - Holographic Blue/Cyan Gradient + Bevel */
     .msg-outbound {
       background: linear-gradient(135deg, rgba(11, 132, 254, 0.85) 0%, rgba(0, 85, 179, 0.9) 100%);
       color: #ffffff;
@@ -362,13 +359,14 @@
       padding: 12px 4px 0 4px;
       display: flex; flex-direction: column; gap: 10px;
       transform-style: preserve-3d;
+      position: relative;
     }
 
     .kbd-row { 
       display: flex; justify-content: center; gap: 6px; width: 100%;
     }
 
-    /* 3D Keycaps with Holographic Glass & Layered Shadows */
+    /* 3D Keycaps */
     .key {
       background: linear-gradient(180deg, var(--key-top) 0%, var(--key-bottom) 100%);
       color: #ffffff;
@@ -436,6 +434,31 @@
       border-color: var(--popup-bg) transparent;
       display: block; width: 0;
     }
+
+    /* REALISTIC 3D GLASS CRACK OVERLAY */
+    .glass-crack-overlay {
+      position: absolute;
+      top: -20px;
+      right: -10px;
+      width: 230px;
+      height: 240px;
+      pointer-events: none; /* Allows taps to pass directly through to keys */
+      z-index: 80;
+      mix-blend-mode: screen;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.9));
+    }
+
+    /* Impact Point Glow */
+    .impact-glow {
+      position: absolute;
+      top: 35px;
+      right: 45px;
+      width: 25px;
+      height: 25px;
+      background: radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(0,243,255,0.6) 30%, transparent 70%);
+      border-radius: 50%;
+      filter: blur(1px);
+    }
   </style>
 </head>
 <body>
@@ -487,6 +510,68 @@
           </div>
 
           <div id="custom-keyboard">
+            <!-- REALISTIC 3D GLASS CRACK SVG OVERLAY -->
+            <div class="glass-crack-overlay">
+              <div class="impact-glow"></div>
+              <svg viewBox="0 0 200 200" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <!-- Refraction Highlight Filter -->
+                  <filter id="crack-glow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="0.8" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+
+                <!-- Impact Point Shatter Ring -->
+                <ellipse cx="145" cy="45" rx="8" ry="6" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.2" />
+                <ellipse cx="145" cy="45" rx="16" ry="12" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="0.8" stroke-dasharray="3,2" />
+                
+                <!-- Primary Radial Fractures (Thick Refracted Light Lines) -->
+                <g stroke="rgba(255,255,255,0.95)" stroke-width="1.2" fill="none" filter="url(#crack-glow)" stroke-linecap="round">
+                  <path d="M145 45 L110 10 L80 -10" />
+                  <path d="M145 45 L170 15 L195 -5" />
+                  <path d="M145 45 L115 85 L85 130 L60 170 L30 200" />
+                  <path d="M145 45 L180 75 L198 100" />
+                  <path d="M145 45 L155 110 L160 160 L150 195" />
+                  <path d="M145 45 L95 50 L40 60 L0 65" />
+                </g>
+
+                <!-- Secondary Micro-Cracks (Dark Shadow & Glass Prism Lines) -->
+                <g stroke="rgba(0,0,0,0.7)" stroke-width="0.8" fill="none" stroke-linecap="round">
+                  <path d="M146 46 L111 11 L81 -9" />
+                  <path d="M146 46 L116 86 L86 131 L61 171" />
+                  <path d="M146 46 L96 51 L41 61" />
+                </g>
+
+                <!-- Webbing & Connectors (Realistic Shatter Lines) -->
+                <g stroke="rgba(255,255,255,0.7)" stroke-width="0.7" fill="none" stroke-linecap="round">
+                  <!-- Web 1 -->
+                  <path d="M125 30 Q135 20 155 28" />
+                  <!-- Web 2 -->
+                  <path d="M110 50 Q120 70 148 62" />
+                  <path d="M130 65 Q150 85 170 70" />
+                  <!-- Web 3 -->
+                  <path d="M70 55 Q90 80 105 100" />
+                  <path d="M100 110 Q130 135 158 130" />
+                  <!-- Offshoot Splinters -->
+                  <path d="M115 85 L130 100" />
+                  <path d="M85 130 L105 145" />
+                  <path d="M95 50 L85 30" />
+                  <path d="M40 60 L25 80" />
+                </g>
+
+                <!-- Glass Refraction Light Highlights (Cyan Prism Effect) -->
+                <g stroke="rgba(0, 243, 255, 0.7)" stroke-width="0.6" fill="none">
+                  <path d="M144 44 L114 84 L84 129" />
+                  <path d="M144 44 L94 49 L39 59" />
+                  <path d="M110 50 Q120 70 148 62" />
+                </g>
+              </svg>
+            </div>
+
             <div class="kbd-keys-wrapper">
               <div id="alpha-layout" style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
                 <div class="kbd-row">
@@ -572,8 +657,6 @@
     let isNumMode = false;
     let backspaceInterval = null;
     let activeBackspaceKey = null;
-    let isKbdHidden = false;
-    let activeTapbackTarget = null;
 
     const chatTimeline = document.getElementById("chat-timeline");
     let visualDisplay = document.getElementById("visual-display");
@@ -581,7 +664,6 @@
     const typingMonitor = document.getElementById("typing-monitor");
     const alphaLayout = document.getElementById("alpha-layout");
     const numLayout = document.getElementById("num-layout");
-    const tapbackOverlay = document.getElementById("tapback-overlay");
 
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     
