@@ -668,6 +668,7 @@
     let outgoingCount = 0;
     let isNumMode = false;
     let backspaceInterval = null;
+    let activeBackspaceKey = null;
     let isKbdHidden = false;
     let activeTapbackTarget = null;
 
@@ -972,6 +973,38 @@
       autoScrollDisplay();
     }
 
+    function stopBackspace() {
+      if (backspaceInterval) {
+        clearInterval(backspaceInterval);
+        backspaceInterval = null;
+      }
+      if (activeBackspaceKey) {
+        activeBackspaceKey.classList.remove("pressed");
+        activeBackspaceKey = null;
+      }
+    }
+
+    // Global drag / release listener to ensure backspace auto-repeat stops if thumb slips away
+    document.addEventListener("touchmove", (e) => {
+      if (activeBackspaceKey && e.touches.length > 0) {
+        const touch = e.touches[0];
+        const rect = activeBackspaceKey.getBoundingClientRect();
+        // Expand hit box slightly to avoid overly strict release
+        if (
+          touch.clientX < rect.left - 15 ||
+          touch.clientX > rect.right + 15 ||
+          touch.clientY < rect.top - 15 ||
+          touch.clientY > rect.bottom + 15
+        ) {
+          stopBackspace();
+        }
+      }
+    }, { passive: true });
+
+    document.addEventListener("touchend", stopBackspace);
+    document.addEventListener("touchcancel", stopBackspace);
+    document.addEventListener("mouseup", stopBackspace);
+
     document.querySelectorAll(".key").forEach(key => {
       if (key.classList.contains("mic-toggle") || key.classList.contains("mode-toggle") || key.classList.contains("return-btn")) return;
 
@@ -984,6 +1017,8 @@
         triggerHaptic('light');
 
         if (isBackspace) {
+          stopBackspace();
+          activeBackspaceKey = key;
           deleteAtCursor();
           backspaceInterval = setInterval(deleteAtCursor, 100);
         } else {
@@ -998,9 +1033,10 @@
       };
 
       const handlePressEnd = () => {
-        key.classList.remove("pressed");
-        if (isBackspace) {
-          clearInterval(backspaceInterval);
+        if (!isBackspace) {
+          key.classList.remove("pressed");
+        } else {
+          stopBackspace();
         }
       };
 
