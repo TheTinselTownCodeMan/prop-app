@@ -17,7 +17,6 @@
       /* Holographic Cyan & Blue Accents */
       --holo-cyan: #00f3ff;
       --holo-blue: #0b84fe;
-      --holo-magenta: #ff00ff;
       
       /* Glowing Multi-layer Shadows */
       --neon-glow-cyan: 0 0 10px rgba(0, 243, 255, 0.6), 0 0 20px rgba(0, 243, 255, 0.3), inset 0 0 8px rgba(0, 243, 255, 0.4);
@@ -79,7 +78,7 @@
       background: transparent;
     }
 
-    /* HEADER - Glass Holo */
+    /* HEADER */
     #app-header {
       min-height: 50px;
       background: var(--header-bg);
@@ -127,6 +126,7 @@
       touch-action: pan-y;
       overscroll-behavior-y: contain;
       z-index: 1;
+      will-change: transform;
     }
 
     .msg-row { 
@@ -156,7 +156,7 @@
       white-space: pre-wrap;
       cursor: pointer;
       position: relative;
-      transition: all 0.15s ease;
+      transition: transform 0.15s ease;
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       text-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
@@ -166,7 +166,6 @@
       transform: scale(0.96) translateZ(-5px);
     }
 
-    /* Inbound - Dark Glass & Cyan Edge Glow */
     .msg-inbound {
       background: var(--holo-glass-bg);
       color: #ffffff;
@@ -177,7 +176,6 @@
         0 0 12px rgba(0, 243, 255, 0.25);
     }
 
-    /* Outbound - Holographic Blue/Cyan Gradient + Bevel */
     .msg-outbound {
       background: linear-gradient(135deg, rgba(11, 132, 254, 0.85) 0%, rgba(0, 85, 179, 0.9) 100%);
       color: #ffffff;
@@ -208,43 +206,6 @@
       border-right: 1px solid rgba(0, 243, 255, 0.6);
       border-bottom: 1px solid rgba(0, 243, 255, 0.6);
       clip-path: polygon(0 0, 0 100%, 100% 100%);
-    }
-
-    /* TAPBACK BADGE */
-    .tapback-badge {
-      position: absolute;
-      top: -12px;
-      background: rgba(20, 30, 50, 0.95);
-      border: 1px solid var(--holo-cyan);
-      box-shadow: var(--neon-glow-cyan);
-      border-radius: 12px;
-      padding: 2px 8px;
-      font-size: 13px;
-      z-index: 5;
-    }
-
-    .inbound-align .tapback-badge { right: -6px; }
-    .outbound-align .tapback-badge { left: -6px; }
-
-    #tapback-overlay {
-      position: absolute;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.6);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      z-index: 200;
-      display: none;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .tapback-bar {
-      background: rgba(15, 22, 35, 0.9);
-      border: 1px solid var(--holo-cyan);
-      box-shadow: var(--neon-glow-cyan);
-      border-radius: 24px;
-      padding: 8px 16px;
-      display: flex; gap: 14px;
     }
 
     .status-stamp { 
@@ -296,12 +257,13 @@
       position: relative;
       flex-shrink: 0;
       z-index: 50;
+      will-change: transform;
     }
 
     #footer-bar {
       border-top: 1px solid var(--border-color);
       padding: 8px 12px;
-      padding-bottom: max(8px, env(safe-area-inset-bottom));
+      padding-bottom: 8px;
       background: rgba(8, 12, 20, 0.8);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
@@ -356,19 +318,21 @@
       position: relative;
       border-top: 1px solid var(--border-color);
       perspective: 800px;
+      touch-action: none;
     }
 
     .kbd-keys-wrapper {
       padding: 12px 4px 0 4px;
       display: flex; flex-direction: column; gap: 10px;
       transform-style: preserve-3d;
+      position: relative;
     }
 
     .kbd-row { 
       display: flex; justify-content: center; gap: 6px; width: 100%;
     }
 
-    /* 3D Keycaps with Holographic Glass & Layered Shadows */
+    /* 3D Keycaps */
     .key {
       background: linear-gradient(180deg, var(--key-top) 0%, var(--key-bottom) 100%);
       color: #ffffff;
@@ -406,7 +370,7 @@
 
     .key-space { flex: 4.5; font-size: 13px; color: rgba(255, 255, 255, 0.6); text-shadow: none; }
 
-    /* HOLOGRAPHIC POPUP BADGE */
+    /* POPUP BADGE */
     .key-popup {
       position: absolute;
       top: -56px;
@@ -441,17 +405,6 @@
 <body>
 
   <div id="secret-reset-zone" onclick="resetScene()"></div>
-
-  <div id="tapback-overlay">
-    <div class="tapback-bar">
-      <span class="tapback-option">❤️</span>
-      <span class="tapback-option">👍</span>
-      <span class="tapback-option">👎</span>
-      <span class="tapback-option">😆</span>
-      <span class="tapback-option">‼️</span>
-      <span class="tapback-option">❓</span>
-    </div>
-  </div>
 
   <div id="app-container">
     <div id="app-header">
@@ -572,8 +525,6 @@
     let isNumMode = false;
     let backspaceInterval = null;
     let activeBackspaceKey = null;
-    let isKbdHidden = false;
-    let activeTapbackTarget = null;
 
     const chatTimeline = document.getElementById("chat-timeline");
     let visualDisplay = document.getElementById("visual-display");
@@ -581,7 +532,8 @@
     const typingMonitor = document.getElementById("typing-monitor");
     const alphaLayout = document.getElementById("alpha-layout");
     const numLayout = document.getElementById("num-layout");
-    const tapbackOverlay = document.getElementById("tapback-overlay");
+    const customKeyboard = document.getElementById("custom-keyboard");
+    const bottomDeckWrapper = document.getElementById("bottom-deck-wrapper");
 
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     
@@ -622,8 +574,120 @@
       else if (type === 'double') navigator.vibrate([15, 30, 15]);
     }
 
+    /* --- INTERACTIVE DRAG TO DISMISS KEYBOARD --- */
+    let startY = 0;
+    let currentY = 0;
+    let isDragging = false;
+    let kbdHeight = 0;
+    let isKeyboardHidden = false;
+    let lastY = 0;
+    let lastTime = 0;
+    let velocityY = 0;
+
+    function applyTransforms(translateY) {
+      customKeyboard.style.transform = `translateY(${translateY}px)`;
+      chatTimeline.style.transform = `translateY(${translateY}px)`;
+    }
+
+    function setTransitions(enabled) {
+      const transitionStyle = enabled ? 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)' : 'none';
+      customKeyboard.style.transition = transitionStyle;
+      chatTimeline.style.transition = transitionStyle;
+    }
+
+    function onTouchStart(e) {
+      if (e.touches.length > 1) return;
+      
+      kbdHeight = customKeyboard.offsetHeight;
+      const touchY = e.touches[0].clientY;
+
+      // Start drag if interacting with timeline or top area of input/kbd
+      if (chatTimeline.contains(e.target) || e.target.closest('#footer-bar') || e.target.closest('#custom-keyboard')) {
+        startY = touchY;
+        currentY = startY;
+        lastY = startY;
+        lastTime = performance.now();
+        velocityY = 0;
+        isDragging = true;
+        setTransitions(false);
+      }
+    }
+
+    function onTouchMove(e) {
+      if (!isDragging) return;
+      
+      currentY = e.touches[0].clientY;
+      const deltaY = currentY - startY;
+      const now = performance.now();
+      const dt = now - lastTime;
+      
+      if (dt > 0) {
+        velocityY = (currentY - lastY) / dt; // velocity in px/ms
+      }
+      lastY = currentY;
+      lastTime = now;
+
+      // Handle downward dragging when visible
+      if (!isKeyboardHidden && deltaY > 0) {
+        applyTransforms(deltaY);
+        e.preventDefault();
+      } 
+      // Handle upward dragging when hidden
+      else if (isKeyboardHidden && deltaY < 0) {
+        const offset = Math.max(0, kbdHeight + deltaY);
+        applyTransforms(offset);
+        e.preventDefault();
+      }
+    }
+
+    function onTouchEnd() {
+      if (!isDragging) return;
+      isDragging = false;
+      setTransitions(true);
+
+      const deltaY = currentY - startY;
+
+      if (!isKeyboardHidden) {
+        // High downward velocity or dragged more than 40% -> Dismiss Keyboard
+        if (velocityY > 0.4 || deltaY > kbdHeight * 0.4) {
+          hideKeyboard();
+        } else {
+          showKeyboard();
+        }
+      } else {
+        // High upward velocity or dragged up more than 40% -> Show Keyboard
+        if (velocityY < -0.4 || deltaY < -kbdHeight * 0.4) {
+          showKeyboard();
+        } else {
+          hideKeyboard();
+        }
+      }
+    }
+
+    function hideKeyboard() {
+      kbdHeight = customKeyboard.offsetHeight || 260;
+      isKeyboardHidden = true;
+      applyTransforms(kbdHeight);
+    }
+
+    function showKeyboard() {
+      isKeyboardHidden = false;
+      applyTransforms(0);
+    }
+
+    window.addEventListener('touchstart', onTouchStart, { passive: false });
+    window.addEventListener('touchmove', onTouchMove, { passive: false });
+    window.addEventListener('touchend', onTouchEnd);
+
+    /* --- INPUT HANDLING --- */
     function attachInputListeners(el) {
-      el.addEventListener("focus", () => el.setAttribute("inputmode", "none"));
+      el.addEventListener("focus", () => {
+        el.setAttribute("inputmode", "none");
+        if (isKeyboardHidden) showKeyboard();
+      });
+      el.addEventListener("click", () => {
+        if (isKeyboardHidden) showKeyboard();
+      });
       el.addEventListener("input", () => {
         el.normalize();
         updateSendButton();
@@ -646,6 +710,7 @@
     }
 
     function insertAtCursor(text) {
+      if (isKeyboardHidden) showKeyboard();
       visualDisplay.focus();
       const sel = window.getSelection();
       if (sel && sel.rangeCount > 0) {
@@ -702,6 +767,7 @@
 
       const handlePressStart = (e) => {
         e.preventDefault();
+        e.stopPropagation();
         key.classList.add("pressed");
         playSound('tap');
         triggerHaptic('light');
@@ -728,7 +794,8 @@
         }
       };
 
-      const handlePressEnd = () => {
+      const handlePressEnd = (e) => {
+        e.stopPropagation();
         if (!isBackspace) key.classList.remove("pressed");
         else stopBackspace();
       };
@@ -816,6 +883,7 @@
       forceClearInput();
       chatTimeline.innerHTML = "";
       typingMonitor.style.display = "none";
+      showKeyboard();
     }
 
     updateSendButton();
