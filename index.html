@@ -376,6 +376,7 @@
       content: 'Message';
       color: #53535d;
       text-shadow: none;
+      pointer-events: none;
     }
 
     #action-trigger {
@@ -559,7 +560,20 @@
         <div id="interactive-bottom-deck">
           <div id="footer-bar">
             <div class="input-container">
-              <div id="visual-display" contenteditable="true" spellcheck="false"></div>
+              <!-- 
+                FIX APPLIED HERE:
+                spellcheck="false", autocorrect="off", autocapitalize="off", data-gramm="false" 
+                prevents Safari/iOS spellcheck engines from locking cursor/backspace selection boundaries.
+              -->
+              <div 
+                id="visual-display" 
+                contenteditable="true" 
+                spellcheck="false" 
+                autocorrect="off" 
+                autocapitalize="off" 
+                data-gramm="false" 
+                data-grammarly-reactid="false"
+              ></div>
               <button id="action-trigger" aria-label="Send">
                 <svg viewBox="0 0 24 24">
                   <path d="M12 3L12 21M12 3L5 10M12 3L19 10" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
@@ -734,16 +748,29 @@
         if (isKbdHidden) openKeyboard();
       });
 
+      // FIX: Merges broken text nodes on typing so cursor never catches on empty text fragments
       el.addEventListener("input", () => {
+        el.normalize();
         updateSendButton();
         autoScrollDisplay();
       });
 
+      // FIX: Ensures internal DOM is clean right before Backspace deletes
       el.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" && !e.shiftKey) {
+        if (e.key === "Backspace") {
+          el.normalize();
+        } else if (e.key === "Enter" && !e.shiftKey) {
           e.preventDefault();
           handleSend();
         }
+      });
+
+      // Clean paste handler to prevent rich text DOM boundaries from breaking backspace
+      el.addEventListener("paste", (e) => {
+        e.preventDefault();
+        const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+        document.execCommand('insertText', false, text);
+        el.normalize();
       });
     }
 
@@ -759,6 +786,10 @@
       newDisplay.id = "visual-display";
       newDisplay.contentEditable = "true";
       newDisplay.spellcheck = false;
+      newDisplay.setAttribute("autocorrect", "off");
+      newDisplay.setAttribute("autocapitalize", "off");
+      newDisplay.setAttribute("data-gramm", "false");
+      newDisplay.setAttribute("data-grammarly-reactid", "false");
       
       parent.replaceChild(newDisplay, visualDisplay);
       visualDisplay = newDisplay;
@@ -947,12 +978,14 @@
         visualDisplay.textContent += text;
       }
       
+      visualDisplay.normalize();
       updateSendButton();
       autoScrollDisplay();
     }
 
     function deleteAtCursor() {
       visualDisplay.focus();
+      visualDisplay.normalize(); // Ensure clean text nodes prior to deletion
       const sel = window.getSelection();
       if (sel && sel.rangeCount > 0) {
         let range = sel.getRangeAt(0);
@@ -967,8 +1000,15 @@
         } else if (range.startOffset > 0) {
           range.setStart(range.startContainer, range.startOffset - 1);
           range.deleteContents();
+        } else if (range.startContainer !== visualDisplay && range.startContainer.previousSibling) {
+          // Handle deleting across node borders if any exist
+          const prevNode = range.startContainer.previousSibling;
+          if (prevNode.nodeType === Node.TEXT_NODE && prevNode.length > 0) {
+            prevNode.deleteData(prevNode.length - 1, 1);
+          }
         }
       }
+      visualDisplay.normalize();
       updateSendButton();
       autoScrollDisplay();
     }
@@ -989,7 +1029,6 @@
       if (activeBackspaceKey && e.touches.length > 0) {
         const touch = e.touches[0];
         const rect = activeBackspaceKey.getBoundingClientRect();
-        // Expand hit box slightly to avoid overly strict release
         if (
           touch.clientX < rect.left - 15 ||
           touch.clientX > rect.right + 15 ||
