@@ -3,727 +3,400 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#000000">
-
-  <title>Messages</title>
+  <title>iMessage Simulator</title>
   <style>
-    :root {
-      --header-bg: #121216;
-      --app-bg: #000000;
-      --border-color: #22222a;
-      --bubble-inbound: #1c1c24;
-      --text-main: #ffffff;
-      --accent-blue: #0b84fe;
-      --neon-cyan: #00f3ff;
-      --neon-glow: 0 0 6px rgba(0, 243, 255, 0.7), 0 0 12px rgba(0, 243, 255, 0.4);
-      --input-bg: #141418;
-      --kbd-bg: #0d0d12;
-      --key-top: #2a2a34;
-      --key-bottom: #1a1a22;
-      --key-shadow: #0a0a0f;
-      --key-special-top: #1e1e28;
-      --key-special-bottom: #14141d;
-      --popup-bg: #3a3a46;
-    }
-
     * {
       box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      -webkit-tap-highlight-color: transparent;
-      -webkit-touch-callout: none;
-    }
-
-    html, body {
-      width: 100%;
-      height: 100%;
-      margin: 0;
-      padding: 0;
-      background-color: var(--app-bg);
-      color: var(--text-main);
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
-      overflow: hidden;
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      left: 0;
-      right: 0;
       user-select: none;
       -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      margin: 0;
+      padding: 0;
     }
 
-    #app-container {
-      display: flex;
-      flex-direction: column;
+    body, html {
       width: 100%;
       height: 100%;
       overflow: hidden;
+      background-color: #000;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+    }
+
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      width: 100vw;
+      height: 100vh;
+      height: -webkit-fill-available;
+      background-color: #fff;
       position: relative;
     }
 
-    /* SECRET RESET ZONE */
-    #secret-reset-zone {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 60px;
-      height: 60px;
-      z-index: 9999;
-      background: transparent;
-    }
-
-    /* HEADER */
-    #app-header {
-      min-height: 50px;
-      background-color: rgba(18, 18, 22, 0.85);
-      border-bottom: 0.5px solid var(--border-color);
+    /* Top Bar Header */
+    .chat-header {
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: space-between;
-      padding: 0 16px;
-      padding-top: max(4px, env(safe-area-inset-top));
-      flex-shrink: 0;
-      z-index: 10;
+      padding-top: calc(env(safe-area-inset-top) + 8px);
+      padding-bottom: 8px;
+      background: rgba(249, 249, 249, 0.94);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
+      border-bottom: 0.5px solid rgba(0, 0, 0, 0.15);
+      z-index: 10;
     }
 
-    .header-back {
-      color: #0b84ff;
-      font-size: 17px;
+    .contact-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #8E8E93, #636366);
       display: flex;
       align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 600;
+      font-size: 16px;
+      margin-bottom: 4px;
     }
 
-    .header-contact {
-      text-align: center;
+    .contact-name {
+      font-size: 12px;
+      font-weight: 500;
+      color: #000;
+      display: flex;
+      align-items: center;
+      gap: 2px;
     }
 
-    /* CHAT VIEW CONTAINER */
-    #chat-view {
+    .contact-name::after {
+      content: "›";
+      font-size: 14px;
+      color: #8C8C8E;
+    }
+
+    /* Chat Messages Body */
+    .chat-messages {
       flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      position: relative;
-      height: 100%;
-    }
-
-    /* TIMELINE */
-    #chat-timeline {
-      flex: 1 1 auto;
+      overflow-y: auto;
       padding: 12px 16px;
-      overflow-y: scroll;
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      width: 100%;
-      -webkit-overflow-scrolling: touch;
-      touch-action: pan-y;
-      overscroll-behavior-y: contain;
-      z-index: 1;
+      gap: 8px;
+      background-color: #fff;
     }
 
-    .msg-row { 
-      display: flex; 
-      flex-direction: column; 
-      max-width: 78%; 
-      position: relative;
-      animation: springPop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-    }
-
-    @keyframes springPop {
-      0% { opacity: 0; transform: scale(0.85) translateY(10px); }
-      100% { opacity: 1; transform: scale(1) translateY(0); }
-    }
-
-    .inbound-align { align-self: flex-start; }
-    .outbound-align { align-self: flex-end; }
-
-    .msg-box {
+    .message {
+      max-width: 75%;
+      padding: 8px 14px;
       border-radius: 18px;
-      padding: 10px 15px;
       font-size: 16px;
       line-height: 1.35;
-      word-break: break-word;
-      white-space: pre-wrap;
-      cursor: pointer;
-      position: relative;
-      transition: transform 0.1s ease;
-      direction: ltr;
-      unicode-bidi: isolate;
-      text-align: left;
+      word-wrap: break-word;
     }
 
-    .msg-box:active {
-      transform: scale(0.97);
-    }
-
-    .msg-inbound {
-      background-color: var(--bubble-inbound);
-      color: #ffffff;
-      border: 1px solid #2d2d3a;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-    }
-
-    .msg-outbound {
-      background: linear-gradient(135deg, #0b84fe 0%, #0055b3 100%);
-      color: #ffffff;
-      text-shadow: var(--neon-glow);
-      box-shadow: 0 0 12px rgba(11, 132, 254, 0.4), 0 4px 12px rgba(0, 0, 0, 0.5);
-    }
-
-    /* BUBBLE TAILS */
-    .has-tail.msg-inbound {
-      border-bottom-left-radius: 4px;
-    }
-
-    .has-tail.msg-inbound::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: -6px;
-      width: 100%;
-      height: 10px;
-      max-width: 10px;
-      background-color: var(--bubble-inbound);
-      border-left: 1px solid #2d2d3a;
-      border-bottom: 1px solid #2d2d3a;
-      clip-path: polygon(100% 0, 0 100%, 100% 100%);
-    }
-
-    .has-tail.msg-outbound {
+    .message.sent {
+      align-self: flex-end;
+      background-color: #34C759;
+      color: #fff;
       border-bottom-right-radius: 4px;
     }
 
-    .has-tail.msg-outbound::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      right: -6px;
-      width: 100%;
-      height: 10px;
-      max-width: 10px;
-      background: #0055b3;
-      clip-path: polygon(0 0, 0 100%, 100% 100%);
-    }
-
-    /* REACTION TAPBACK BADGE */
-    .tapback-badge {
-      position: absolute;
-      top: -12px;
-      background: #2a2a36;
-      border: 1px solid var(--neon-cyan);
-      box-shadow: var(--neon-glow);
-      border-radius: 12px;
-      padding: 2px 6px;
-      font-size: 13px;
-      z-index: 5;
-      animation: springPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-
-    .inbound-align .tapback-badge { right: -6px; }
-    .outbound-align .tapback-badge { left: -6px; }
-
-    /* FLOATING TAPBACK MENU */
-    #tapback-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.4);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-      z-index: 200;
-      display: none;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .tapback-bar {
-      background: rgba(30, 30, 40, 0.95);
-      border: 1px solid var(--neon-cyan);
-      box-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
-      border-radius: 24px;
-      padding: 8px 14px;
-      display: flex;
-      gap: 14px;
-      animation: springPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-
-    .tapback-option {
-      font-size: 22px;
-      cursor: pointer;
-      transition: transform 0.15s ease;
-    }
-
-    .tapback-option:active {
-      transform: scale(1.4);
-    }
-
-    .status-stamp { 
-      font-size: 10px; 
-      color: #636366; 
-      margin-top: 2px; 
-      margin-bottom: 6px;
-      padding: 0 4px; 
-      font-weight: 500;
-    }
-
-    .outbound-align .status-stamp { text-align: right; }
-
-    /* TYPING INDICATOR */
-    #typing-monitor {
-      display: none;
+    .message.received {
       align-self: flex-start;
-      background: var(--bubble-inbound);
-      padding: 10px 16px;
-      border-radius: 18px;
+      background-color: #E9E9EB;
+      color: #000;
       border-bottom-left-radius: 4px;
-      margin-left: 16px;
-      margin-bottom: 8px;
-      border: 1px solid #2d2d3a;
-      flex-shrink: 0;
     }
 
-    .pulse-dot {
-      display: inline-block;
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background-color: var(--neon-cyan);
-      box-shadow: var(--neon-glow);
-      margin: 0 2px;
-      animation: pulse 1.2s infinite;
-    }
-    .pulse-dot:nth-child(2) { animation-delay: 0.2s; }
-    .pulse-dot:nth-child(3) { animation-delay: 0.4s; }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 0.3; transform: scale(0.8); }
-      50% { opacity: 1; transform: scale(1.2); }
-    }
-
-    /* BOTTOM CONTAINER */
-    #bottom-deck-wrapper {
-      display: flex;
-      flex-direction: column;
-      width: 100%;
-      position: relative;
-      flex-shrink: 0;
-      z-index: 50;
-      margin-bottom: 0px;
-      transition: margin-bottom 0s;
-    }
-
-    #bottom-deck-wrapper.animate-slide {
-      transition: margin-bottom 0.25s cubic-bezier(0.2, 0.9, 0.3, 1);
-    }
-
-    #interactive-bottom-deck {
-      display: flex;
-      flex-direction: column;
-      width: 100%;
-      position: relative;
-    }
-
-    #footer-bar {
-      border-top: 0.5px solid var(--border-color);
+    /* Input Dock Area */
+    .input-dock {
+      background: #F9F9F9;
+      border-top: 0.5px solid rgba(0, 0, 0, 0.12);
       padding: 8px 12px;
-      padding-bottom: max(8px, env(safe-area-inset-bottom));
-      background: #121216;
-      width: 100%;
-      position: relative;
-      z-index: 2;
+      padding-bottom: 4px;
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
     }
 
-    .input-container { 
-      display: flex; 
-      align-items: flex-end; 
-      gap: 8px; 
-      width: 100%; 
-    }
-
-    #visual-display {
-      flex: 1;
-      padding: 8px 14px;
-      border: 1px solid #2d2d3a;
-      border-radius: 20px;
-      background: var(--input-bg);
-      color: #ffffff;
-      font-size: 16px;
-      line-height: 1.3;
-      min-height: 38px;
-      max-height: 120px;
-      overflow-y: auto;
-      word-break: break-word;
-      white-space: pre-wrap;
-      text-shadow: 0 0 4px rgba(255, 255, 255, 0.6);
-      position: relative;
-      outline: none;
-      caret-color: var(--accent-blue);
-      user-select: text;
-      -webkit-user-select: text;
-      direction: ltr;
-      unicode-bidi: isolate;
-      text-align: left;
-    }
-
-    #visual-display:empty:before {
-      content: 'Message';
-      color: #53535d;
-      text-shadow: none;
-      pointer-events: none;
-    }
-
-    #action-trigger {
+    .add-btn {
       width: 32px;
       height: 32px;
       border-radius: 50%;
-      background: #2a2a34;
-      color: #1c1c1e;
-      border: none;
+      background: #E9E9EB;
       display: flex;
       align-items: center;
       justify-content: center;
+      color: #636366;
+      font-size: 20px;
+      font-weight: 300;
       cursor: pointer;
       flex-shrink: 0;
-      margin-bottom: 3px;
-      transition: all 0.2s ease;
+      margin-bottom: 2px;
     }
 
-    #action-trigger svg { width: 16px; height: 16px; fill: currentColor; }
-    
-    #action-trigger.ready {
-      background: var(--accent-blue);
-      color: #ffffff;
-      box-shadow: 0 0 10px rgba(11, 132, 254, 0.6);
-    }
-
-    #custom-keyboard {
-      background-color: var(--kbd-bg);
-      padding-bottom: max(14px, env(safe-area-inset-bottom));
+    .input-container {
+      flex: 1;
+      min-height: 36px;
+      max-height: 120px;
+      background: #FFFFFF;
+      border: 1px solid #C6C6C8;
+      border-radius: 18px;
+      padding: 6px 12px 6px 12px;
       display: flex;
-      flex-direction: column;
-      flex-shrink: 0;
+      align-items: center;
       position: relative;
-      border-top: 1px solid #1a1a24;
-      max-height: 320px;
-      overflow: visible;
-      opacity: 1;
-      z-index: 10;
     }
 
-    .kbd-keys-wrapper {
-      padding: 12px 4px 0 4px;
+    /* ContentEditable Text Box */
+    .text-display {
+      width: 100%;
+      outline: none;
+      font-size: 16px;
+      line-height: 1.3;
+      color: #000;
+      white-space: pre-wrap;
+      word-break: break-word;
+      user-select: text;
+      -webkit-user-select: text;
+      max-height: 100px;
+      overflow-y: auto;
+    }
+
+    .text-display:empty::before {
+      content: "iMessage";
+      color: #8E8E93;
+      pointer-events: none;
+    }
+
+    .send-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #34C759;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      cursor: pointer;
+      flex-shrink: 0;
+      margin-left: 6px;
+      opacity: 0.3;
+      pointer-events: none;
+      transition: opacity 0.15s ease;
+      margin-bottom: 2px;
+    }
+
+    .send-btn.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .send-btn svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+
+    /* iOS Keyboard Styling */
+    .keyboard {
+      background: #D1D3D9;
+      padding: 6px 3px calc(env(safe-area-inset-bottom) + 6px) 3px;
       display: flex;
       flex-direction: column;
       gap: 10px;
-      overflow: visible;
     }
 
-    .kbd-row { 
-      display: flex; 
-      justify-content: center; 
-      gap: 6px; 
-      width: 100%; 
-      position: relative; 
-      overflow: visible; 
+    .keyboard-row {
+      display: flex;
+      justify-content: center;
+      gap: 5px;
+      width: 100%;
     }
 
     .key {
-      background: linear-gradient(180deg, var(--key-top) 0%, var(--key-bottom) 100%);
-      color: #ffffff;
-      font-size: 18px;
-      font-weight: 500;
-      border-radius: 7px;
-      height: 44px;
+      background: #FFFFFF;
+      border-radius: 5px;
+      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+      height: 42px;
       flex: 1;
+      max-width: 32px;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 
-        inset 0 1px 0 rgba(255, 255, 255, 0.15),
-        0 4px 0 var(--key-shadow),
-        0 6px 10px rgba(0,0,0,0.6);
-      position: relative;
+      font-size: 22px;
+      font-weight: 400;
+      color: #000;
       cursor: pointer;
-      touch-action: manipulation;
-      transition: transform 0.05s ease, box-shadow 0.05s ease;
-      text-shadow: var(--neon-glow);
-      overflow: visible;
+      position: relative;
     }
 
-    .key:active, .key.pressed {
-      transform: translateY(3px);
-      box-shadow: 
-        inset 0 1px 0 rgba(255, 255, 255, 0.15),
-        0 1px 0 var(--key-shadow),
-        0 2px 4px rgba(0,0,0,0.6);
+    .key.pressed {
+      background: #B4B7AC;
     }
 
-    .key-special {
-      background: linear-gradient(180deg, var(--key-special-top) 0%, var(--key-special-bottom) 100%);
-      font-size: 13px;
+    .key.special {
+      background: #ACB1BC;
+      font-size: 15px;
+      max-width: none;
+    }
+
+    .key.special.pressed {
+      background: #FFFFFF;
+    }
+
+    .key.space-btn {
+      flex: 5;
+      max-width: none;
+      font-size: 15px;
+    }
+
+    .key.return-btn {
+      flex: 2.2;
+      max-width: none;
+      font-size: 15px;
+      color: #000;
+    }
+
+    .key.backspace-btn, .key.shift-btn {
       flex: 1.4;
-      text-shadow: none;
+      max-width: none;
     }
 
-    .key-space { flex: 4.5; font-size: 13px; color: #8e8e93; text-shadow: none; }
+    .key svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
 
-    .key-icon svg { width: 20px; height: 20px; fill: currentColor; filter: drop-shadow(0 0 3px rgba(255,255,255,0.3)); }
-
-    /* KEY POPUP */
+    /* Key Popup Preview */
     .key-popup {
       position: absolute;
-      top: -52px;
+      top: -45px;
+      left: 50%;
+      transform: translateX(-50%);
       width: 48px;
-      height: 56px;
-      background: var(--popup-bg);
-      color: #ffffff;
+      height: 52px;
+      background: #FFFFFF;
       border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.28);
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       justify-content: center;
-      padding-top: 6px;
-      font-size: 26px;
-      font-weight: 600;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.8), 0 0 10px rgba(0, 243, 255, 0.3);
-      z-index: 999;
+      font-size: 28px;
+      font-weight: 400;
+      color: #000;
       pointer-events: none;
-      transform: translateX(-50%);
-      left: 50%;
-      text-shadow: var(--neon-glow);
-      border: 1px solid rgba(0, 243, 255, 0.3);
-    }
-
-    .key-popup::after {
-      content: '';
-      position: absolute;
-      bottom: -6px;
-      left: 50%;
-      transform: translateX(-50%);
-      border-width: 6px 6px 0;
-      border-style: solid;
-      border-color: var(--popup-bg) transparent;
-      display: block;
-      width: 0;
+      z-index: 100;
     }
   </style>
 </head>
 <body>
 
-  <!-- Secret Invisible Trigger Area -->
-  <div id="secret-reset-zone" onclick="resetScene()"></div>
-
-  <!-- TAPBACK REACTION OVERLAY -->
-  <div id="tapback-overlay">
-    <div class="tapback-bar">
-      <span class="tapback-option">❤️</span>
-      <span class="tapback-option">👍</span>
-      <span class="tapback-option">👎</span>
-      <span class="tapback-option">😆</span>
-      <span class="tapback-option">‼️</span>
-      <span class="tapback-option">❓</span>
-    </div>
-  </div>
-
-  <div id="app-container">
+  <div class="app-container">
     <!-- Header -->
-    <div id="app-header">
-      <div class="header-back">
-        <svg width="12" height="20" viewBox="0 0 12 20" fill="none">
-          <path d="M10 2L2 10L10 18" stroke="#0B84FF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </div>
-      <div class="header-contact"></div>
-      <div style="width: 20px;"></div>
+    <div class="chat-header">
+      <div class="contact-avatar">JD</div>
+      <div class="contact-name">John Doe</div>
     </div>
 
-    <!-- Main Chat Container -->
-    <div id="chat-view">
-      <!-- Chat Timeline -->
-      <div id="chat-timeline"></div>
+    <!-- Messages Window -->
+    <div class="chat-messages" id="chatMessages">
+      <div class="message received">Hey! Let me know when you're on set.</div>
+    </div>
 
-      <!-- Typing Indicator -->
-      <div id="typing-monitor">
-        <span class="pulse-dot"></span>
-        <span class="pulse-dot"></span>
-        <span class="pulse-dot"></span>
+    <!-- Input Dock -->
+    <div class="input-dock">
+      <div class="add-btn">+</div>
+      <div class="input-container">
+        <div class="text-display" id="visualDisplay" contenteditable="true" spellcheck="false"></div>
+      </div>
+      <div class="send-btn" id="sendBtn">
+        <svg viewBox="0 0 24 24"><path d="M12 3L4 11H9V21H15V11H20L12 3Z"/></svg>
+      </div>
+    </div>
+
+    <!-- Simulated iOS Keyboard -->
+    <div class="keyboard" id="keyboard">
+      <!-- Row 1 -->
+      <div class="keyboard-row">
+        <div class="key" data-char="q">q</div>
+        <div class="key" data-char="w">w</div>
+        <div class="key" data-char="e">e</div>
+        <div class="key" data-char="r">r</div>
+        <div class="key" data-char="t">t</div>
+        <div class="key" data-char="y">y</div>
+        <div class="key" data-char="u">u</div>
+        <div class="key" data-char="i">i</div>
+        <div class="key" data-char="o">o</div>
+        <div class="key" data-char="p">p</div>
       </div>
 
-      <!-- Combined Sliding Deck Wrapper -->
-      <div id="bottom-deck-wrapper">
-        <div id="interactive-bottom-deck">
-          <div id="footer-bar">
-            <div class="input-container">
-              <!-- 
-                FIX APPLIED HERE:
-                spellcheck="false", autocorrect="off", autocapitalize="off", data-gramm="false" 
-                prevents Safari/iOS spellcheck engines from locking cursor/backspace selection boundaries.
-              -->
-              <div 
-                id="visual-display" 
-                contenteditable="true" 
-                spellcheck="false" 
-                autocorrect="off" 
-                autocapitalize="off" 
-                data-gramm="false" 
-                data-grammarly-reactid="false"
-              ></div>
-              <button id="action-trigger" aria-label="Send">
-                <svg viewBox="0 0 24 24">
-                  <path d="M12 3L12 21M12 3L5 10M12 3L19 10" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </button>
-            </div>
-          </div>
+      <!-- Row 2 -->
+      <div class="keyboard-row">
+        <div class="key" data-char="a">a</div>
+        <div class="key" data-char="s">s</div>
+        <div class="key" data-char="d">d</div>
+        <div class="key" data-char="f">f</div>
+        <div class="key" data-char="g">g</div>
+        <div class="key" data-char="h">h</div>
+        <div class="key" data-char="j">j</div>
+        <div class="key" data-char="k">k</div>
+        <div class="key" data-char="l">l</div>
+      </div>
 
-          <div id="custom-keyboard">
-            <div class="kbd-keys-wrapper">
-              <!-- ALPHA LAYOUT -->
-              <div id="alpha-layout" style="display: flex; flex-direction: column; gap: 10px; width: 100%; overflow: visible;">
-                <div class="kbd-row">
-                  <div class="key" data-char="q">q</div><div class="key" data-char="w">w</div>
-                  <div class="key" data-char="e">e</div><div class="key" data-char="r">r</div>
-                  <div class="key" data-char="t">t</div><div class="key" data-char="y">y</div>
-                  <div class="key" data-char="u">u</div><div class="key" data-char="i">i</div>
-                  <div class="key" data-char="o">o</div><div class="key" data-char="p">p</div>
-                </div>
-                <div class="kbd-row" style="padding: 0 12px;">
-                  <div class="key" data-char="a">a</div><div class="key" data-char="s">s</div>
-                  <div class="key" data-char="d">d</div><div class="key" data-char="f">f</div>
-                  <div class="key" data-char="g">g</div><div class="key" data-char="h">h</div>
-                  <div class="key" data-char="j">j</div><div class="key" data-char="k">k</div>
-                  <div class="key" data-char="l">l</div>
-                </div>
-                <div class="kbd-row">
-                  <div class="key key-special key-icon">
-                    <svg viewBox="0 0 24 24"><path d="M12 3L4 12h5v8h6v-8h5z"/></svg>
-                  </div>
-                  <div class="key" data-char="z">z</div><div class="key" data-char="x">x</div>
-                  <div class="key" data-char="c">c</div><div class="key" data-char="v">v</div>
-                  <div class="key" data-char="b">b</div><div class="key" data-char="n">n</div>
-                  <div class="key" data-char="m">m</div>
-                  <div class="key key-special key-icon backspace-btn">
-                    <svg viewBox="0 0 24 24"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"/></svg>
-                  </div>
-                </div>
-                <div class="kbd-row">
-                  <div class="key key-special mode-toggle">123</div>
-                  <div class="key key-special key-icon">
-                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
-                  </div>
-                  <div class="key key-space" data-char=" ">space</div>
-                  <div class="key key-special return-btn">return</div>
-                  <div class="key key-special key-icon mic-toggle">
-                    <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.49 6-3.31 6-6.72h-1.7z"/></svg>
-                  </div>
-                </div>
-              </div>
-
-              <!-- NUMERIC / SYMBOL LAYOUT -->
-              <div id="num-layout" style="display: none; flex-direction: column; gap: 10px; width: 100%; overflow: visible;">
-                <div class="kbd-row">
-                  <div class="key" data-char="1">1</div><div class="key" data-char="2">2</div>
-                  <div class="key" data-char="3">3</div><div class="key" data-char="4">4</div>
-                  <div class="key" data-char="5">5</div><div class="key" data-char="6">6</div>
-                  <div class="key" data-char="7">7</div><div class="key" data-char="8">8</div>
-                  <div class="key" data-char="9">9</div><div class="key" data-char="0">0</div>
-                </div>
-                <div class="kbd-row">
-                  <div class="key" data-char="-">-</div><div class="key" data-char="/">/</div>
-                  <div class="key" data-char=":">:</div><div class="key" data-char=";">;</div>
-                  <div class="key" data-char="(">(</div><div class="key" data-char=")">)</div>
-                  <div class="key" data-char="$">$</div><div class="key" data-char="&">&</div>
-                  <div class="key" data-char="@">@</div><div class="key" data-char='"'>"</div>
-                </div>
-                <div class="kbd-row">
-                  <div class="key" data-char=".">.</div><div class="key" data-char=",">,</div>
-                  <div class="key" data-char="?">?</div><div class="key" data-char="!">!</div>
-                  <div class="key" data-char="'">'</div><div class="key" data-char="#">#</div>
-                  <div class="key" data-char="%">%</div><div class="key" data-char="*">*</div>
-                  <div class="key key-special key-icon backspace-btn">
-                    <svg viewBox="0 0 24 24"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"/></svg>
-                  </div>
-                </div>
-                <div class="kbd-row">
-                  <div class="key key-special mode-toggle">ABC</div>
-                  <div class="key key-special key-icon">
-                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
-                  </div>
-                  <div class="key key-space" data-char=" ">space</div>
-                  <div class="key key-special return-btn">return</div>
-                  <div class="key key-special key-icon mic-toggle">
-                    <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.49 6-3.31 6-6.72h-1.7z"/></svg>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+      <!-- Row 3 -->
+      <div class="keyboard-row">
+        <div class="key special shift-btn" id="shiftBtn">
+          <svg viewBox="0 0 24 24"><path d="M12 4L5 13H9V20H15V13H19L12 4Z"/></svg>
         </div>
+        <div class="key" data-char="z">z</div>
+        <div class="key" data-char="x">x</div>
+        <div class="key" data-char="c">c</div>
+        <div class="key" data-char="v">v</div>
+        <div class="key" data-char="b">b</div>
+        <div class="key" data-char="n">n</div>
+        <div class="key" data-char="m">m</div>
+        <div class="key special backspace-btn" id="backspaceBtn">
+          <svg viewBox="0 0 24 24"><path d="M22 3H7C6.3 3 5.7 3.3 5.3 3.8L0 12L5.3 20.2C5.7 20.7 6.3 21 7 21H22C23.1 21 24 20.1 24 19V5C24 3.9 23.1 3 22 3ZM18.3 15.3L16.9 16.7L13 12.8L9.1 16.7L7.7 15.3L11.6 11.4L7.7 7.5L9.1 6.1L13 10L16.9 6.1L18.3 7.5L14.4 11.4L18.3 15.3Z"/></svg>
+        </div>
+      </div>
+
+      <!-- Row 4 -->
+      <div class="keyboard-row">
+        <div class="key special mode-toggle">123</div>
+        <div class="key special mic-toggle">
+          <svg viewBox="0 0 24 24"><path d="M12 14C13.66 14 15 12.66 15 11V5C15 3.34 13.66 2 12 2C10.34 2 9 3.34 9 5V11C9 12.66 10.34 14 12 14ZM17.3 11C17.3 14 14.76 16.1 12 16.1C9.24 16.1 6.7 14 6.7 11H5C5 14.41 7.72 17.23 11 17.72V21H13V17.72C16.28 17.23 19 14.41 19 11H17.3Z"/></svg>
+        </div>
+        <div class="key space-btn" data-char=" ">space</div>
+        <div class="key special return-btn" id="returnBtn">return</div>
       </div>
     </div>
   </div>
 
   <script>
-    const inboundScript = [
-      { triggerAfterMsgCount: 2, text: "Copy that. Watch your back, radar indicates movement near you." },
-      { triggerAfterMsgCount: 3, text: "I'm waiting by the north entrance." },
-      { triggerAfterMsgCount: 5, text: "Clear to move. Backup is in position." }
-    ];
-
-    const RESPONSE_DELAY_MS = 4500;
-    const READ_DELAY_MS = 2500;
-
-    let outgoingCount = 0;
-    let isNumMode = false;
+    const visualDisplay = document.getElementById("visualDisplay");
+    const sendBtn = document.getElementById("sendBtn");
+    const chatMessages = document.getElementById("chatMessages");
+    const shiftBtn = document.getElementById("shiftBtn");
+    
+    let isShift = false;
     let backspaceInterval = null;
     let activeBackspaceKey = null;
-    let isKbdHidden = false;
-    let activeTapbackTarget = null;
 
-    const chatView = document.getElementById("chat-view");
-    const chatTimeline = document.getElementById("chat-timeline");
-    let visualDisplay = document.getElementById("visual-display");
-    const actionTrigger = document.getElementById("action-trigger");
-    const typingMonitor = document.getElementById("typing-monitor");
-    const deckWrapper = document.getElementById("bottom-deck-wrapper");
-    const customKeyboard = document.getElementById("custom-keyboard");
-    const alphaLayout = document.getElementById("alpha-layout");
-    const numLayout = document.getElementById("num-layout");
-    const tapbackOverlay = document.getElementById("tapback-overlay");
-
+    // Web Audio API Haptic Sound Generator
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    
     function playSound(type) {
-      if (audioCtx.state === 'suspended') audioCtx.resume();
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.connect(gain);
       gain.connect(audioCtx.destination);
 
-      if (type === 'send') {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(400, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.12);
-        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.12);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.12);
-      } else if (type === 'receive') {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(750, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(500, audioCtx.currentTime + 0.18);
-        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.18);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.18);
-      } else if (type === 'tap') {
-        osc.type = 'triangle';
+      if (type === 'tap') {
         osc.frequency.setValueAtTime(120, audioCtx.currentTime);
         gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.03);
@@ -732,318 +405,116 @@
       }
     }
 
-    function triggerHaptic(type = 'light') {
-      if (!navigator.vibrate) return;
-      if (type === 'light') navigator.vibrate(10);
-      else if (type === 'medium') navigator.vibrate(25);
-      else if (type === 'double') navigator.vibrate([15, 30, 15]);
+    function triggerHaptic(type) {
+      if (navigator.vibrate) {
+        if (type === 'light') navigator.vibrate(10);
+      }
     }
 
-    function attachInputListeners(el) {
-      el.addEventListener("focus", () => {
-        el.setAttribute("inputmode", "none");
-      });
-
-      el.addEventListener("click", () => {
-        if (isKbdHidden) openKeyboard();
-      });
-
-      // FIX: Merges broken text nodes on typing so cursor never catches on empty text fragments
-      el.addEventListener("input", () => {
-        el.normalize();
-        updateSendButton();
-        autoScrollDisplay();
-      });
-
-      // FIX: Ensures internal DOM is clean right before Backspace deletes
-      el.addEventListener("keydown", (e) => {
-        if (e.key === "Backspace") {
-          el.normalize();
-        } else if (e.key === "Enter" && !e.shiftKey) {
-          e.preventDefault();
-          handleSend();
-        }
-      });
-
-      // Clean paste handler to prevent rich text DOM boundaries from breaking backspace
-      el.addEventListener("paste", (e) => {
-        e.preventDefault();
-        const text = (e.clipboardData || window.clipboardData).getData('text/plain');
-        document.execCommand('insertText', false, text);
-        el.normalize();
-      });
+    function updateSendButton() {
+      if (visualDisplay.innerText.trim().length > 0) {
+        sendBtn.classList.add("active");
+      } else {
+        sendBtn.classList.remove("active");
+      }
     }
-
-    attachInputListeners(visualDisplay);
 
     function autoScrollDisplay() {
       visualDisplay.scrollTop = visualDisplay.scrollHeight;
     }
 
-    function forceClearInput() {
-      const parent = visualDisplay.parentNode;
-      const newDisplay = document.createElement("div");
-      newDisplay.id = "visual-display";
-      newDisplay.contentEditable = "true";
-      newDisplay.spellcheck = false;
-      newDisplay.setAttribute("autocorrect", "off");
-      newDisplay.setAttribute("autocapitalize", "off");
-      newDisplay.setAttribute("data-gramm", "false");
-      newDisplay.setAttribute("data-grammarly-reactid", "false");
-      
-      parent.replaceChild(newDisplay, visualDisplay);
-      visualDisplay = newDisplay;
-      attachInputListeners(visualDisplay);
-
-      const sel = window.getSelection();
-      if (sel) sel.removeAllRanges();
-
-      updateSendButton();
-    }
-
-    document.addEventListener('touchstart', function(e) {
-      if (e.touches.length === 3) {
-        resetScene();
-      }
-    });
-
-    function openKeyboard() {
-      isKbdHidden = false;
-      deckWrapper.classList.add("animate-slide");
-      deckWrapper.style.marginBottom = `0px`;
-      visualDisplay.focus();
-      updateSendButton();
-      chatTimeline.scrollTop = chatTimeline.scrollHeight;
-    }
-
-    function hideKeyboard() {
-      isKbdHidden = true;
-      const keyboardHeight = customKeyboard.offsetHeight;
-      deckWrapper.classList.add("animate-slide");
-      deckWrapper.style.marginBottom = `-${keyboardHeight}px`;
-      visualDisplay.blur();
-      updateSendButton();
-    }
-
-    let touchStartY = 0;
-    let initialMargin = 0;
-    let isDraggingDeck = false;
-    let lastTouchY = 0;
-    let touchTime = 0;
-    let velocity = 0;
-
-    chatTimeline.addEventListener("touchstart", (e) => {
-      touchStartY = e.touches[0].clientY;
-      lastTouchY = touchStartY;
-      touchTime = Date.now();
-      
-      const style = window.getComputedStyle(deckWrapper);
-      initialMargin = parseFloat(style.marginBottom) || 0;
-
-      const isAtBottom = (chatTimeline.scrollHeight - chatTimeline.scrollTop - chatTimeline.clientHeight) <= 2;
-      
-      if (isAtBottom && !isKbdHidden) {
-        isDraggingDeck = true;
-        deckWrapper.classList.remove("animate-slide");
-      } else {
-        isDraggingDeck = false;
-      }
-    }, { passive: true });
-
-    chatTimeline.addEventListener("touchmove", (e) => {
-      const currentY = e.touches[0].clientY;
-      const deltaY = currentY - touchStartY;
-
-      if (deltaY > 0 && !isDraggingDeck && !isKbdHidden) {
-        const isAtBottom = (chatTimeline.scrollHeight - chatTimeline.scrollTop - chatTimeline.clientHeight) <= 2;
-        if (isAtBottom) {
-          isDraggingDeck = true;
-          deckWrapper.classList.remove("animate-slide");
-        }
-      }
-
-      if (!isDraggingDeck) return;
-
-      const now = Date.now();
-      velocity = (currentY - lastTouchY) / (now - touchTime || 1);
-      lastTouchY = currentY;
-      touchTime = now;
-
-      const maxDismiss = customKeyboard.offsetHeight;
-      let newMargin = initialMargin - deltaY;
-
-      if (newMargin > 0) newMargin = 0; 
-      if (newMargin < -maxDismiss) newMargin = -maxDismiss;
-
-      deckWrapper.style.marginBottom = `${newMargin}px`;
-    }, { passive: true });
-
-    chatTimeline.addEventListener("touchend", () => {
-      if (!isDraggingDeck) return;
-      isDraggingDeck = false;
-
-      const maxDismiss = customKeyboard.offsetHeight;
-      const style = window.getComputedStyle(deckWrapper);
-      const currentMargin = parseFloat(style.marginBottom) || 0;
-
-      if (currentMargin < -(maxDismiss * 0.35) || velocity > 0.4) {
-        hideKeyboard();
-      } else {
-        openKeyboard();
-      }
-    });
-
-    tapbackOverlay.addEventListener("click", (e) => {
-      if (e.target.classList.contains("tapback-option") && activeTapbackTarget) {
-        const emoji = e.target.textContent;
-        let badge = activeTapbackTarget.querySelector(".tapback-badge");
-        if (!badge) {
-          badge = document.createElement("div");
-          badge.className = "tapback-badge";
-          activeTapbackTarget.appendChild(badge);
-        }
-        badge.textContent = emoji;
-        triggerHaptic('double');
-      }
-      tapbackOverlay.style.display = "none";
-      activeTapbackTarget = null;
-    });
-
-    function showTapback(msgBox) {
-      activeTapbackTarget = msgBox;
-      tapbackOverlay.style.display = "flex";
-      triggerHaptic('medium');
-    }
-
-    function toggleKeyboardLayout(e) {
-      if (e) e.preventDefault();
-      triggerHaptic('light');
-      isNumMode = !isNumMode;
-      if (isNumMode) {
-        alphaLayout.style.display = "none";
-        numLayout.style.display = "flex";
-      } else {
-        alphaLayout.style.display = "flex";
-        numLayout.style.display = "none";
-      }
-    }
-
-    document.querySelectorAll(".mode-toggle").forEach(btn => {
-      btn.addEventListener("touchstart", toggleKeyboardLayout, { passive: false });
-      btn.addEventListener("mousedown", toggleKeyboardLayout);
-    });
-
-    document.querySelectorAll(".mic-toggle").forEach(btn => {
-      const handleMic = (e) => {
-        e.preventDefault();
-        triggerHaptic('light');
-        hideKeyboard();
-      };
-      btn.addEventListener("touchstart", handleMic, { passive: false });
-      btn.addEventListener("mousedown", handleMic);
-    });
-
-    document.querySelectorAll(".return-btn").forEach(btn => {
-      const handleReturn = (e) => {
-        e.preventDefault();
-        triggerHaptic('light');
-        insertAtCursor("\n");
-      };
-      btn.addEventListener("touchstart", handleReturn, { passive: false });
-      btn.addEventListener("mousedown", handleReturn);
-    });
-
+    // Single-Character Insertion
     function insertAtCursor(text) {
       visualDisplay.focus();
       const sel = window.getSelection();
-      
-      if (sel && sel.rangeCount > 0) {
-        let range = sel.getRangeAt(0);
-        
-        if (!visualDisplay.contains(range.commonAncestorContainer)) {
-          range = document.createRange();
-          range.selectNodeContents(visualDisplay);
-          range.collapse(false);
-        }
+      if (!sel || sel.rangeCount === 0) return;
 
-        range.deleteContents();
-        const textNode = document.createTextNode(text);
-        range.insertNode(textNode);
-        
-        range.setStartAfter(textNode);
-        range.setEndAfter(textNode);
+      let range = sel.getRangeAt(0);
+
+      if (!visualDisplay.contains(range.commonAncestorContainer)) {
+        range = document.createRange();
+        range.selectNodeContents(visualDisplay);
+        range.collapse(false);
         sel.removeAllRanges();
         sel.addRange(range);
-      } else {
-        visualDisplay.textContent += text;
       }
+
+      const textNode = document.createTextNode(text);
+      range.deleteContents();
+      range.insertNode(textNode);
+
+      range.setStartAfter(textNode);
+      range.setEndAfter(textNode);
+      sel.removeAllRanges();
+      sel.addRange(range);
+
+      visualDisplay.normalize();
+      updateSendButton();
+      autoScrollDisplay();
+
+      if (isShift && text !== ' ') {
+        toggleShift(false);
+      }
+    }
+
+    // FIX: Single-Character Deletion
+    function deleteAtCursor() {
+      visualDisplay.focus();
+      
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return;
+
+      let range = sel.getRangeAt(0);
+
+      // If text is manually highlighted, delete selection
+      if (!range.collapsed) {
+        range.deleteContents();
+        visualDisplay.normalize();
+        updateSendButton();
+        autoScrollDisplay();
+        return;
+      }
+
+      // If cursor is at start of field, do nothing
+      if (range.startOffset === 0 && range.startContainer === visualDisplay) {
+        return;
+      }
+
+      // Execute single-character backspace
+      document.execCommand('delete', false, null);
       
       visualDisplay.normalize();
       updateSendButton();
       autoScrollDisplay();
     }
 
-    function deleteAtCursor() {
-      visualDisplay.focus();
-      visualDisplay.normalize(); // Ensure clean text nodes prior to deletion
-      const sel = window.getSelection();
-      if (sel && sel.rangeCount > 0) {
-        let range = sel.getRangeAt(0);
-        if (!visualDisplay.contains(range.commonAncestorContainer)) {
-          range = document.createRange();
-          range.selectNodeContents(visualDisplay);
-          range.collapse(false);
+    function toggleShift(state) {
+      isShift = state !== undefined ? state : !isShift;
+      const keys = document.querySelectorAll(".key[data-char]");
+      keys.forEach(k => {
+        const char = k.getAttribute("data-char");
+        if (char && char.length === 1 && char !== " ") {
+          k.innerText = isShift ? char.toUpperCase() : char.toLowerCase();
         }
-
-        if (!range.collapsed) {
-          range.deleteContents();
-        } else if (range.startOffset > 0) {
-          range.setStart(range.startContainer, range.startOffset - 1);
-          range.deleteContents();
-        } else if (range.startContainer !== visualDisplay && range.startContainer.previousSibling) {
-          // Handle deleting across node borders if any exist
-          const prevNode = range.startContainer.previousSibling;
-          if (prevNode.nodeType === Node.TEXT_NODE && prevNode.length > 0) {
-            prevNode.deleteData(prevNode.length - 1, 1);
-          }
-        }
-      }
-      visualDisplay.normalize();
-      updateSendButton();
-      autoScrollDisplay();
-    }
-
-    function stopBackspace() {
-      if (backspaceInterval) {
-        clearInterval(backspaceInterval);
-        backspaceInterval = null;
-      }
-      if (activeBackspaceKey) {
-        activeBackspaceKey.classList.remove("pressed");
-        activeBackspaceKey = null;
+      });
+      if (isShift) {
+        shiftBtn.classList.add("pressed");
+      } else {
+        shiftBtn.classList.remove("pressed");
       }
     }
 
-    // Global drag / release listener to ensure backspace auto-repeat stops if thumb slips away
-    document.addEventListener("touchmove", (e) => {
-      if (activeBackspaceKey && e.touches.length > 0) {
-        const touch = e.touches[0];
-        const rect = activeBackspaceKey.getBoundingClientRect();
-        if (
-          touch.clientX < rect.left - 15 ||
-          touch.clientX > rect.right + 15 ||
-          touch.clientY < rect.top - 15 ||
-          touch.clientY > rect.bottom + 15
-        ) {
-          stopBackspace();
-        }
-      }
-    }, { passive: true });
+    function showKeyPopup(keyElement, char) {
+      const popup = document.createElement("div");
+      popup.className = "key-popup";
+      popup.innerText = char;
+      keyElement.appendChild(popup);
+      setTimeout(() => {
+        popup.remove();
+      }, 120);
+    }
 
-    document.addEventListener("touchend", stopBackspace);
-    document.addEventListener("touchcancel", stopBackspace);
-    document.addEventListener("mouseup", stopBackspace);
-
+    // Keyboard Key Touch & Hold Events
     document.querySelectorAll(".key").forEach(key => {
       if (key.classList.contains("mic-toggle") || key.classList.contains("mode-toggle") || key.classList.contains("return-btn")) return;
 
@@ -1058,14 +529,26 @@
         if (isBackspace) {
           stopBackspace();
           activeBackspaceKey = key;
+          
+          // 1. Delete ONE single character on initial tap
           deleteAtCursor();
-          backspaceInterval = setInterval(deleteAtCursor, 100);
+
+          // 2. Wait 400ms before backspacing character-by-character continuously
+          backspaceInterval = setTimeout(() => {
+            backspaceInterval = setInterval(() => {
+              deleteAtCursor();
+            }, 50);
+          }, 400);
+
         } else {
-          const charVal = key.getAttribute("data-char");
+          let charVal = key.getAttribute("data-char");
           if (charVal !== null) {
+            if (isShift && charVal.length === 1 && charVal !== " ") {
+              charVal = charVal.toUpperCase();
+            }
             insertAtCursor(charVal);
             if (charVal.trim().length === 1) {
-              showKeyPopup(key, charVal.toUpperCase());
+              showKeyPopup(key, charVal);
             }
           }
         }
@@ -1086,121 +569,43 @@
       key.addEventListener("mouseleave", handlePressEnd);
     });
 
-    function showKeyPopup(keyElement, charLabel) {
-      const popup = document.createElement("div");
-      popup.className = "key-popup";
-      popup.textContent = charLabel;
-      keyElement.appendChild(popup);
-
-      setTimeout(() => {
-        popup.remove();
-      }, 150);
-    }
-
-    function updateSendButton() {
-      const text = (visualDisplay.textContent || "").trim();
-      if (text.length > 0) {
-        actionTrigger.classList.add("ready");
-      } else {
-        actionTrigger.classList.remove("ready");
+    function stopBackspace() {
+      if (backspaceInterval) {
+        clearTimeout(backspaceInterval);
+        clearInterval(backspaceInterval);
+        backspaceInterval = null;
+      }
+      if (activeBackspaceKey) {
+        activeBackspaceKey.classList.remove("pressed");
+        activeBackspaceKey = null;
       }
     }
 
-    actionTrigger.addEventListener("click", handleSend);
+    // Shift Toggle Event
+    shiftBtn.addEventListener("click", () => {
+      toggleShift();
+    });
 
-    function handleSend() {
-      const rawText = visualDisplay.innerText || visualDisplay.textContent || "";
-      const text = rawText.trim();
-      if (text.length === 0) return;
+    // Send Button Action
+    sendBtn.addEventListener("click", () => {
+      const text = visualDisplay.innerText.trim();
+      if (!text) return;
 
-      playSound('send');
-      triggerHaptic('medium');
+      const msgDiv = document.createElement("div");
+      msgDiv.className = "message sent";
+      msgDiv.innerText = text;
+      chatMessages.appendChild(msgDiv);
 
-      dispatchMessage(text, "outbound");
-      outgoingCount++;
-      
-      forceClearInput();
-      checkAndTriggerReply();
-    }
+      visualDisplay.innerText = "";
+      updateSendButton();
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    });
 
-    function checkAndTriggerReply() {
-      const matchingReply = inboundScript.find(item => item.triggerAfterMsgCount === outgoingCount);
-
-      if (matchingReply) {
-        setTimeout(() => {
-          typingMonitor.style.display = "block";
-          chatTimeline.scrollTop = chatTimeline.scrollHeight;
-        }, READ_DELAY_MS + 800);
-
-        setTimeout(() => {
-          typingMonitor.style.display = "none";
-          playSound('receive');
-          triggerHaptic('double');
-          dispatchMessage(matchingReply.text, "inbound");
-        }, RESPONSE_DELAY_MS);
-      }
-    }
-
-    function dispatchMessage(text, vector) {
-      const previousRows = chatTimeline.querySelectorAll(`.msg-row.${vector}-align`);
-      if (previousRows.length > 0) {
-        const lastBox = previousRows[previousRows.length - 1].querySelector('.msg-box');
-        if (lastBox) lastBox.classList.remove('has-tail');
-      }
-
-      const row = document.createElement("div");
-      row.className = `msg-row ${vector}-align`;
-
-      const box = document.createElement("div");
-      box.className = `msg-box msg-${vector} has-tail`;
-      box.textContent = text;
-
-      let pressTimer;
-      box.addEventListener("touchstart", () => {
-        pressTimer = setTimeout(() => showTapback(box), 500);
-      }, { passive: true });
-      box.addEventListener("touchend", () => clearTimeout(pressTimer));
-      
-      let lastTap = 0;
-      box.addEventListener("click", () => {
-        const now = Date.now();
-        if (now - lastTap < 300) {
-          showTapback(box);
-        }
-        lastTap = now;
-      });
-
-      const stamp = document.createElement("div");
-      stamp.className = "status-stamp";
-      
-      if (vector === "outbound") {
-        stamp.textContent = "Delivered";
-        
-        setTimeout(() => {
-          const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-          stamp.textContent = `Read ${nowTime}`;
-        }, READ_DELAY_MS);
-
-      } else {
-        stamp.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      }
-
-      row.appendChild(box);
-      row.appendChild(stamp);
-      chatTimeline.appendChild(row);
-
-      chatTimeline.scrollTop = chatTimeline.scrollHeight;
-    }
-
-    function resetScene() {
-      outgoingCount = 0;
-      forceClearInput();
-      chatTimeline.innerHTML = "";
-      typingMonitor.style.display = "none";
-      openKeyboard();
-    }
-
-    updateSendButton();
+    // Monitor Direct Typing or Pastes
+    visualDisplay.addEventListener("input", () => {
+      updateSendButton();
+      autoScrollDisplay();
+    });
   </script>
 </body>
 </html>
