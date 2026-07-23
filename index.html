@@ -10,22 +10,29 @@
   <title>Messages</title>
   <style>
     :root {
-      --header-bg: #121216;
-      --app-bg: #000000;
-      --border-color: #22222a;
-      --bubble-inbound: #1c1c24;
-      --text-main: #ffffff;
-      --accent-blue: #0b84fe;
-      --neon-cyan: #00f3ff;
-      --neon-glow: 0 0 6px rgba(0, 243, 255, 0.7), 0 0 12px rgba(0, 243, 255, 0.4);
-      --input-bg: #141418;
-      --kbd-bg: #0d0d12;
-      --key-top: #2a2a34;
-      --key-bottom: #1a1a22;
-      --key-shadow: #0a0a0f;
-      --key-special-top: #1e1e28;
-      --key-special-bottom: #14141d;
-      --popup-bg: #3a3a46;
+      --header-bg: rgba(18, 18, 26, 0.65);
+      --app-bg: #030508;
+      --border-color: rgba(0, 243, 255, 0.25);
+      
+      /* Holographic Cyan & Blue Accents */
+      --holo-cyan: #00f3ff;
+      --holo-blue: #0b84fe;
+      --holo-magenta: #ff00ff;
+      
+      /* Glowing Multi-layer Shadows */
+      --neon-glow-cyan: 0 0 10px rgba(0, 243, 255, 0.6), 0 0 20px rgba(0, 243, 255, 0.3), inset 0 0 8px rgba(0, 243, 255, 0.4);
+      --neon-glow-blue: 0 0 12px rgba(11, 132, 254, 0.7), 0 0 25px rgba(11, 132, 254, 0.4), inset 0 0 10px rgba(0, 243, 255, 0.5);
+      --holo-glass-bg: rgba(16, 24, 40, 0.55);
+
+      --input-bg: rgba(10, 15, 26, 0.75);
+      --kbd-bg: rgba(8, 12, 20, 0.85);
+      
+      /* 3D Glass Keycap Palette */
+      --key-top: rgba(40, 55, 80, 0.8);
+      --key-bottom: rgba(15, 22, 35, 0.95);
+      --key-shadow: #020408;
+      --key-border: rgba(0, 243, 255, 0.35);
+      --popup-bg: rgba(20, 30, 50, 0.95);
     }
 
     * {
@@ -42,14 +49,14 @@
       margin: 0;
       padding: 0;
       background-color: var(--app-bg);
-      color: var(--text-main);
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+      background-image: 
+        radial-gradient(circle at 50% 20%, rgba(0, 243, 255, 0.08) 0%, transparent 60%),
+        radial-gradient(circle at 80% 80%, rgba(11, 132, 254, 0.08) 0%, transparent 50%);
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       overflow: hidden;
       position: absolute;
-      top: 0;
-      bottom: 0;
-      left: 0;
-      right: 0;
+      top: 0; bottom: 0; left: 0; right: 0;
       user-select: none;
       -webkit-user-select: none;
     }
@@ -66,19 +73,18 @@
     /* SECRET RESET ZONE */
     #secret-reset-zone {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 60px;
-      height: 60px;
+      top: 0; left: 0;
+      width: 60px; height: 60px;
       z-index: 9999;
       background: transparent;
     }
 
-    /* HEADER */
+    /* HEADER - Glass Holo */
     #app-header {
       min-height: 50px;
-      background-color: rgba(18, 18, 22, 0.85);
-      border-bottom: 0.5px solid var(--border-color);
+      background: var(--header-bg);
+      border-bottom: 1px solid var(--border-color);
+      box-shadow: 0 4px 20px rgba(0, 243, 255, 0.15);
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -86,19 +92,16 @@
       padding-top: max(4px, env(safe-area-inset-top));
       flex-shrink: 0;
       z-index: 10;
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
     }
 
     .header-back {
-      color: #0b84ff;
+      color: var(--holo-cyan);
       font-size: 17px;
       display: flex;
       align-items: center;
-    }
-
-    .header-contact {
-      text-align: center;
+      filter: drop-shadow(0 0 6px var(--holo-cyan));
     }
 
     /* CHAT VIEW CONTAINER */
@@ -114,11 +117,11 @@
     /* TIMELINE */
     #chat-timeline {
       flex: 1 1 auto;
-      padding: 12px 16px;
+      padding: 16px;
       overflow-y: scroll;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 10px;
       width: 100%;
       -webkit-overflow-scrolling: touch;
       touch-action: pan-y;
@@ -129,114 +132,106 @@
     .msg-row { 
       display: flex; 
       flex-direction: column; 
-      max-width: 78%; 
+      max-width: 80%; 
       position: relative;
+      perspective: 1000px;
       animation: springPop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     }
 
     @keyframes springPop {
-      0% { opacity: 0; transform: scale(0.85) translateY(10px); }
-      100% { opacity: 1; transform: scale(1) translateY(0); }
+      0% { opacity: 0; transform: scale(0.85) translateY(12px) rotateX(-10deg); }
+      100% { opacity: 1; transform: scale(1) translateY(0) rotateX(0deg); }
     }
 
     .inbound-align { align-self: flex-start; }
     .outbound-align { align-self: flex-end; }
 
+    /* 3D HOLOGRAPHIC BUBBLES */
     .msg-box {
       border-radius: 18px;
-      padding: 10px 15px;
+      padding: 12px 16px;
       font-size: 16px;
-      line-height: 1.35;
+      line-height: 1.4;
       word-break: break-word;
       white-space: pre-wrap;
       cursor: pointer;
       position: relative;
-      transition: transform 0.1s ease;
-      direction: ltr;
-      unicode-bidi: isolate;
-      text-align: left;
+      transition: all 0.15s ease;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      text-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
     }
 
     .msg-box:active {
-      transform: scale(0.97);
+      transform: scale(0.96) translateZ(-5px);
     }
 
+    /* Inbound - Dark Glass & Cyan Edge Glow */
     .msg-inbound {
-      background-color: var(--bubble-inbound);
+      background: var(--holo-glass-bg);
       color: #ffffff;
-      border: 1px solid #2d2d3a;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(0, 243, 255, 0.35);
+      box-shadow: 
+        inset 0 1px 1px rgba(255, 255, 255, 0.2),
+        0 8px 20px rgba(0, 0, 0, 0.6),
+        0 0 12px rgba(0, 243, 255, 0.25);
     }
 
+    /* Outbound - Holographic Blue/Cyan Gradient + Bevel */
     .msg-outbound {
-      background: linear-gradient(135deg, #0b84fe 0%, #0055b3 100%);
+      background: linear-gradient(135deg, rgba(11, 132, 254, 0.85) 0%, rgba(0, 85, 179, 0.9) 100%);
       color: #ffffff;
-      text-shadow: var(--neon-glow);
-      box-shadow: 0 0 12px rgba(11, 132, 254, 0.4), 0 4px 12px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(0, 243, 255, 0.6);
+      box-shadow: var(--neon-glow-blue);
     }
 
-    /* BUBBLE TAILS */
-    .has-tail.msg-inbound {
-      border-bottom-left-radius: 4px;
-    }
-
+    /* TAILS */
+    .has-tail.msg-inbound { border-bottom-left-radius: 4px; }
     .has-tail.msg-inbound::after {
       content: '';
       position: absolute;
-      bottom: 0;
-      left: -6px;
-      width: 100%;
-      height: 10px;
-      max-width: 10px;
-      background-color: var(--bubble-inbound);
-      border-left: 1px solid #2d2d3a;
-      border-bottom: 1px solid #2d2d3a;
+      bottom: 0; left: -6px;
+      width: 10px; height: 10px;
+      background: var(--holo-glass-bg);
+      border-left: 1px solid rgba(0, 243, 255, 0.35);
+      border-bottom: 1px solid rgba(0, 243, 255, 0.35);
       clip-path: polygon(100% 0, 0 100%, 100% 100%);
     }
 
-    .has-tail.msg-outbound {
-      border-bottom-right-radius: 4px;
-    }
-
+    .has-tail.msg-outbound { border-bottom-right-radius: 4px; }
     .has-tail.msg-outbound::after {
       content: '';
       position: absolute;
-      bottom: 0;
-      right: -6px;
-      width: 100%;
-      height: 10px;
-      max-width: 10px;
-      background: #0055b3;
+      bottom: 0; right: -6px;
+      width: 10px; height: 10px;
+      background: rgba(0, 85, 179, 0.9);
+      border-right: 1px solid rgba(0, 243, 255, 0.6);
+      border-bottom: 1px solid rgba(0, 243, 255, 0.6);
       clip-path: polygon(0 0, 0 100%, 100% 100%);
     }
 
-    /* REACTION TAPBACK BADGE */
+    /* TAPBACK BADGE */
     .tapback-badge {
       position: absolute;
       top: -12px;
-      background: #2a2a36;
-      border: 1px solid var(--neon-cyan);
-      box-shadow: var(--neon-glow);
+      background: rgba(20, 30, 50, 0.95);
+      border: 1px solid var(--holo-cyan);
+      box-shadow: var(--neon-glow-cyan);
       border-radius: 12px;
-      padding: 2px 6px;
+      padding: 2px 8px;
       font-size: 13px;
       z-index: 5;
-      animation: springPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
     .inbound-align .tapback-badge { right: -6px; }
     .outbound-align .tapback-badge { left: -6px; }
 
-    /* FLOATING TAPBACK MENU */
     #tapback-overlay {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.4);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       z-index: 200;
       display: none;
       align-items: center;
@@ -244,33 +239,21 @@
     }
 
     .tapback-bar {
-      background: rgba(30, 30, 40, 0.95);
-      border: 1px solid var(--neon-cyan);
-      box-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
+      background: rgba(15, 22, 35, 0.9);
+      border: 1px solid var(--holo-cyan);
+      box-shadow: var(--neon-glow-cyan);
       border-radius: 24px;
-      padding: 8px 14px;
-      display: flex;
-      gap: 14px;
-      animation: springPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-
-    .tapback-option {
-      font-size: 22px;
-      cursor: pointer;
-      transition: transform 0.15s ease;
-    }
-
-    .tapback-option:active {
-      transform: scale(1.4);
+      padding: 8px 16px;
+      display: flex; gap: 14px;
     }
 
     .status-stamp { 
       font-size: 10px; 
-      color: #636366; 
-      margin-top: 2px; 
-      margin-bottom: 6px;
+      color: rgba(0, 243, 255, 0.6); 
+      margin-top: 4px; margin-bottom: 6px;
       padding: 0 4px; 
       font-weight: 500;
+      text-shadow: 0 0 4px rgba(0, 243, 255, 0.4);
     }
 
     .outbound-align .status-stamp { text-align: right; }
@@ -279,23 +262,21 @@
     #typing-monitor {
       display: none;
       align-self: flex-start;
-      background: var(--bubble-inbound);
+      background: var(--holo-glass-bg);
       padding: 10px 16px;
       border-radius: 18px;
       border-bottom-left-radius: 4px;
-      margin-left: 16px;
-      margin-bottom: 8px;
-      border: 1px solid #2d2d3a;
-      flex-shrink: 0;
+      margin-left: 16px; margin-bottom: 8px;
+      border: 1px solid rgba(0, 243, 255, 0.35);
+      box-shadow: var(--neon-glow-cyan);
     }
 
     .pulse-dot {
       display: inline-block;
-      width: 7px;
-      height: 7px;
+      width: 7px; height: 7px;
       border-radius: 50%;
-      background-color: var(--neon-cyan);
-      box-shadow: var(--neon-glow);
+      background-color: var(--holo-cyan);
+      box-shadow: 0 0 8px var(--holo-cyan);
       margin: 0 2px;
       animation: pulse 1.2s infinite;
     }
@@ -304,7 +285,7 @@
 
     @keyframes pulse {
       0%, 100% { opacity: 0.3; transform: scale(0.8); }
-      50% { opacity: 1; transform: scale(1.2); }
+      50% { opacity: 1; transform: scale(1.3); }
     }
 
     /* BOTTOM CONTAINER */
@@ -315,211 +296,152 @@
       position: relative;
       flex-shrink: 0;
       z-index: 50;
-      margin-bottom: 0px;
-      transition: margin-bottom 0s;
-    }
-
-    #bottom-deck-wrapper.animate-slide {
-      transition: margin-bottom 0.25s cubic-bezier(0.2, 0.9, 0.3, 1);
-    }
-
-    #interactive-bottom-deck {
-      display: flex;
-      flex-direction: column;
-      width: 100%;
-      position: relative;
     }
 
     #footer-bar {
-      border-top: 0.5px solid var(--border-color);
+      border-top: 1px solid var(--border-color);
       padding: 8px 12px;
       padding-bottom: max(8px, env(safe-area-inset-bottom));
-      background: #121216;
+      background: rgba(8, 12, 20, 0.8);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       width: 100%;
-      position: relative;
-      z-index: 2;
     }
 
-    .input-container { 
-      display: flex; 
-      align-items: flex-end; 
-      gap: 8px; 
-      width: 100%; 
-    }
+    .input-container { display: flex; align-items: flex-end; gap: 8px; width: 100%; }
 
     #visual-display {
       flex: 1;
-      padding: 8px 14px;
-      border: 1px solid #2d2d3a;
+      padding: 10px 16px;
+      border: 1px solid rgba(0, 243, 255, 0.4);
       border-radius: 20px;
       background: var(--input-bg);
       color: #ffffff;
       font-size: 16px;
       line-height: 1.3;
-      min-height: 38px;
-      max-height: 120px;
+      min-height: 40px; max-height: 120px;
       overflow-y: auto;
       word-break: break-word;
       white-space: pre-wrap;
-      text-shadow: 0 0 4px rgba(255, 255, 255, 0.6);
-      position: relative;
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.8), 0 0 10px rgba(0, 243, 255, 0.2);
       outline: none;
-      caret-color: var(--accent-blue);
-      user-select: text;
-      -webkit-user-select: text;
-      direction: ltr;
-      unicode-bidi: isolate;
-      text-align: left;
-    }
-
-    #visual-display:empty:before {
-      content: 'Message';
-      color: #53535d;
-      text-shadow: none;
-      pointer-events: none;
+      caret-color: var(--holo-cyan);
     }
 
     #action-trigger {
-      width: 32px;
-      height: 32px;
+      width: 36px; height: 36px;
       border-radius: 50%;
-      background: #2a2a34;
-      color: #1c1c1e;
-      border: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      flex-shrink: 0;
-      margin-bottom: 3px;
+      background: rgba(30, 45, 65, 0.8);
+      color: rgba(255,255,255,0.4);
+      border: 1px solid rgba(0, 243, 255, 0.2);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0; margin-bottom: 2px;
       transition: all 0.2s ease;
     }
 
-    #action-trigger svg { width: 16px; height: 16px; fill: currentColor; }
-    
     #action-trigger.ready {
-      background: var(--accent-blue);
+      background: var(--holo-blue);
       color: #ffffff;
-      box-shadow: 0 0 10px rgba(11, 132, 254, 0.6);
+      border-color: var(--holo-cyan);
+      box-shadow: var(--neon-glow-cyan);
     }
 
+    /* 3D HOLOGRAPHIC KEYBOARD */
     #custom-keyboard {
-      background-color: var(--kbd-bg);
+      background: var(--kbd-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       padding-bottom: max(14px, env(safe-area-inset-bottom));
-      display: flex;
-      flex-direction: column;
-      flex-shrink: 0;
+      display: flex; flex-direction: column; flex-shrink: 0;
       position: relative;
-      border-top: 1px solid #1a1a24;
-      max-height: 320px;
-      overflow: visible;
-      opacity: 1;
-      z-index: 10;
+      border-top: 1px solid var(--border-color);
+      perspective: 800px;
     }
 
     .kbd-keys-wrapper {
       padding: 12px 4px 0 4px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      overflow: visible;
+      display: flex; flex-direction: column; gap: 10px;
+      transform-style: preserve-3d;
     }
 
     .kbd-row { 
-      display: flex; 
-      justify-content: center; 
-      gap: 6px; 
-      width: 100%; 
-      position: relative; 
-      overflow: visible; 
+      display: flex; justify-content: center; gap: 6px; width: 100%;
     }
 
+    /* 3D Keycaps with Holographic Glass & Layered Shadows */
     .key {
       background: linear-gradient(180deg, var(--key-top) 0%, var(--key-bottom) 100%);
       color: #ffffff;
-      font-size: 18px;
-      font-weight: 500;
-      border-radius: 7px;
-      height: 44px;
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      font-size: 18px; font-weight: 600;
+      border-radius: 8px;
+      height: 44px; flex: 1;
+      display: flex; align-items: center; justify-content: center;
+      border: 1px solid var(--key-border);
       box-shadow: 
-        inset 0 1px 0 rgba(255, 255, 255, 0.15),
-        0 4px 0 var(--key-shadow),
-        0 6px 10px rgba(0,0,0,0.6);
-      position: relative;
-      cursor: pointer;
-      touch-action: manipulation;
-      transition: transform 0.05s ease, box-shadow 0.05s ease;
-      text-shadow: var(--neon-glow);
-      overflow: visible;
+        inset 0 1px 0 rgba(255, 255, 255, 0.35),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.6),
+        0 5px 0 var(--key-shadow),
+        0 8px 15px rgba(0, 0, 0, 0.7),
+        0 0 6px rgba(0, 243, 255, 0.25);
+      position: relative; cursor: pointer;
+      transition: transform 0.06s ease, box-shadow 0.06s ease, border-color 0.06s ease;
+      text-shadow: 0 0 6px var(--holo-cyan);
     }
 
     .key:active, .key.pressed {
-      transform: translateY(3px);
+      transform: translateY(4px) translateZ(-4px);
+      border-color: var(--holo-cyan);
       box-shadow: 
-        inset 0 1px 0 rgba(255, 255, 255, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+        inset 0 0 8px rgba(0, 243, 255, 0.6),
         0 1px 0 var(--key-shadow),
-        0 2px 4px rgba(0,0,0,0.6);
+        0 2px 5px rgba(0, 0, 0, 0.8),
+        0 0 12px var(--holo-cyan);
     }
 
     .key-special {
-      background: linear-gradient(180deg, var(--key-special-top) 0%, var(--key-special-bottom) 100%);
-      font-size: 13px;
-      flex: 1.4;
-      text-shadow: none;
+      background: linear-gradient(180deg, rgba(25, 35, 55, 0.85) 0%, rgba(12, 18, 30, 0.95) 100%);
+      font-size: 13px; flex: 1.4; text-shadow: none;
     }
 
-    .key-space { flex: 4.5; font-size: 13px; color: #8e8e93; text-shadow: none; }
+    .key-space { flex: 4.5; font-size: 13px; color: rgba(255, 255, 255, 0.6); text-shadow: none; }
 
-    .key-icon svg { width: 20px; height: 20px; fill: currentColor; filter: drop-shadow(0 0 3px rgba(255,255,255,0.3)); }
-
-    /* KEY POPUP */
+    /* HOLOGRAPHIC POPUP BADGE */
     .key-popup {
       position: absolute;
-      top: -52px;
-      width: 48px;
-      height: 56px;
+      top: -56px;
+      width: 50px; height: 58px;
       background: var(--popup-bg);
       color: #ffffff;
-      border-radius: 8px;
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
+      border-radius: 10px;
+      display: flex; align-items: flex-start; justify-content: center;
       padding-top: 6px;
-      font-size: 26px;
-      font-weight: 600;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.8), 0 0 10px rgba(0, 243, 255, 0.3);
+      font-size: 26px; font-weight: 700;
+      border: 1px solid var(--holo-cyan);
+      box-shadow: var(--neon-glow-cyan), 0 10px 25px rgba(0, 0, 0, 0.8);
       z-index: 999;
       pointer-events: none;
       transform: translateX(-50%);
       left: 50%;
-      text-shadow: var(--neon-glow);
-      border: 1px solid rgba(0, 243, 255, 0.3);
+      text-shadow: 0 0 10px var(--holo-cyan);
     }
 
     .key-popup::after {
       content: '';
       position: absolute;
-      bottom: -6px;
-      left: 50%;
+      bottom: -6px; left: 50%;
       transform: translateX(-50%);
       border-width: 6px 6px 0;
       border-style: solid;
       border-color: var(--popup-bg) transparent;
-      display: block;
-      width: 0;
+      display: block; width: 0;
     }
   </style>
 </head>
 <body>
 
-  <!-- Secret Invisible Trigger Area -->
   <div id="secret-reset-zone" onclick="resetScene()"></div>
 
-  <!-- TAPBACK REACTION OVERLAY -->
   <div id="tapback-overlay">
     <div class="tapback-bar">
       <span class="tapback-option">❤️</span>
@@ -532,45 +454,32 @@
   </div>
 
   <div id="app-container">
-    <!-- Header -->
     <div id="app-header">
       <div class="header-back">
         <svg width="12" height="20" viewBox="0 0 12 20" fill="none">
-          <path d="M10 2L2 10L10 18" stroke="#0B84FF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M10 2L2 10L10 18" stroke="#00f3ff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
       <div class="header-contact"></div>
       <div style="width: 20px;"></div>
     </div>
 
-    <!-- Main Chat Container -->
     <div id="chat-view">
-      <!-- Chat Timeline -->
       <div id="chat-timeline"></div>
 
-      <!-- Typing Indicator -->
       <div id="typing-monitor">
         <span class="pulse-dot"></span>
         <span class="pulse-dot"></span>
         <span class="pulse-dot"></span>
       </div>
 
-      <!-- Combined Sliding Deck Wrapper -->
       <div id="bottom-deck-wrapper">
         <div id="interactive-bottom-deck">
           <div id="footer-bar">
             <div class="input-container">
-              <div 
-                id="visual-display" 
-                contenteditable="true" 
-                spellcheck="false" 
-                autocorrect="off" 
-                autocapitalize="off" 
-                data-gramm="false" 
-                data-grammarly-reactid="false"
-              ></div>
+              <div id="visual-display" contenteditable="true" spellcheck="false" autocorrect="off" autocapitalize="off" data-gramm="false"></div>
               <button id="action-trigger" aria-label="Send">
-                <svg viewBox="0 0 24 24">
+                <svg viewBox="0 0 24 24" width="18" height="18">
                   <path d="M12 3L12 21M12 3L5 10M12 3L19 10" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </button>
@@ -579,8 +488,7 @@
 
           <div id="custom-keyboard">
             <div class="kbd-keys-wrapper">
-              <!-- ALPHA LAYOUT -->
-              <div id="alpha-layout" style="display: flex; flex-direction: column; gap: 10px; width: 100%; overflow: visible;">
+              <div id="alpha-layout" style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
                 <div class="kbd-row">
                   <div class="key" data-char="q">q</div><div class="key" data-char="w">w</div>
                   <div class="key" data-char="e">e</div><div class="key" data-char="r">r</div>
@@ -597,31 +505,24 @@
                 </div>
                 <div class="kbd-row">
                   <div class="key key-special key-icon">
-                    <svg viewBox="0 0 24 24"><path d="M12 3L4 12h5v8h6v-8h5z"/></svg>
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 3L4 12h5v8h6v-8h5z"/></svg>
                   </div>
                   <div class="key" data-char="z">z</div><div class="key" data-char="x">x</div>
                   <div class="key" data-char="c">c</div><div class="key" data-char="v">v</div>
                   <div class="key" data-char="b">b</div><div class="key" data-char="n">n</div>
                   <div class="key" data-char="m">m</div>
                   <div class="key key-special key-icon backspace-btn">
-                    <svg viewBox="0 0 24 24"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"/></svg>
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"/></svg>
                   </div>
                 </div>
                 <div class="kbd-row">
                   <div class="key key-special mode-toggle">123</div>
-                  <div class="key key-special key-icon">
-                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
-                  </div>
                   <div class="key key-space" data-char=" ">space</div>
                   <div class="key key-special return-btn">return</div>
-                  <div class="key key-special key-icon mic-toggle">
-                    <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.49 6-3.31 6-6.72h-1.7z"/></svg>
-                  </div>
                 </div>
               </div>
 
-              <!-- NUMERIC / SYMBOL LAYOUT -->
-              <div id="num-layout" style="display: none; flex-direction: column; gap: 10px; width: 100%; overflow: visible;">
+              <div id="num-layout" style="display: none; flex-direction: column; gap: 10px; width: 100%;">
                 <div class="kbd-row">
                   <div class="key" data-char="1">1</div><div class="key" data-char="2">2</div>
                   <div class="key" data-char="3">3</div><div class="key" data-char="4">4</div>
@@ -640,21 +541,14 @@
                   <div class="key" data-char=".">.</div><div class="key" data-char=",">,</div>
                   <div class="key" data-char="?">?</div><div class="key" data-char="!">!</div>
                   <div class="key" data-char="'">'</div><div class="key" data-char="#">#</div>
-                  <div class="key" data-char="%">%</div><div class="key" data-char="*">*</div>
                   <div class="key key-special key-icon backspace-btn">
-                    <svg viewBox="0 0 24 24"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"/></svg>
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"/></svg>
                   </div>
                 </div>
                 <div class="kbd-row">
                   <div class="key key-special mode-toggle">ABC</div>
-                  <div class="key key-special key-icon">
-                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
-                  </div>
                   <div class="key key-space" data-char=" ">space</div>
                   <div class="key key-special return-btn">return</div>
-                  <div class="key key-special key-icon mic-toggle">
-                    <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.49 6-3.31 6-6.72h-1.7z"/></svg>
-                  </div>
                 </div>
               </div>
             </div>
@@ -681,13 +575,10 @@
     let isKbdHidden = false;
     let activeTapbackTarget = null;
 
-    const chatView = document.getElementById("chat-view");
     const chatTimeline = document.getElementById("chat-timeline");
     let visualDisplay = document.getElementById("visual-display");
     const actionTrigger = document.getElementById("action-trigger");
     const typingMonitor = document.getElementById("typing-monitor");
-    const deckWrapper = document.getElementById("bottom-deck-wrapper");
-    const customKeyboard = document.getElementById("custom-keyboard");
     const alphaLayout = document.getElementById("alpha-layout");
     const numLayout = document.getElementById("num-layout");
     const tapbackOverlay = document.getElementById("tapback-overlay");
@@ -707,23 +598,20 @@
         osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.12);
         gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.12);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.12);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.12);
       } else if (type === 'receive') {
         osc.type = 'sine';
         osc.frequency.setValueAtTime(750, audioCtx.currentTime);
         osc.frequency.exponentialRampToValueAtTime(500, audioCtx.currentTime + 0.18);
         gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.18);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.18);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.18);
       } else if (type === 'tap') {
         osc.type = 'triangle';
-        osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(140, audioCtx.currentTime);
         gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.03);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.03);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.03);
       }
     }
 
@@ -735,233 +623,41 @@
     }
 
     function attachInputListeners(el) {
-      el.addEventListener("focus", () => {
-        el.setAttribute("inputmode", "none");
-      });
-
-      el.addEventListener("click", () => {
-        if (isKbdHidden) openKeyboard();
-      });
-
+      el.addEventListener("focus", () => el.setAttribute("inputmode", "none"));
       el.addEventListener("input", () => {
         el.normalize();
         updateSendButton();
         autoScrollDisplay();
       });
-
       el.addEventListener("keydown", (e) => {
-        if (e.key === "Backspace") {
-          el.normalize();
-        } else if (e.key === "Enter" && !e.shiftKey) {
-          e.preventDefault();
-          handleSend();
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault(); handleSend();
         }
-      });
-
-      el.addEventListener("paste", (e) => {
-        e.preventDefault();
-        const text = (e.clipboardData || window.clipboardData).getData('text/plain');
-        document.execCommand('insertText', false, text);
-        el.normalize();
       });
     }
 
     attachInputListeners(visualDisplay);
 
-    function autoScrollDisplay() {
-      visualDisplay.scrollTop = visualDisplay.scrollHeight;
-    }
+    function autoScrollDisplay() { visualDisplay.scrollTop = visualDisplay.scrollHeight; }
 
     function forceClearInput() {
-      const parent = visualDisplay.parentNode;
-      const newDisplay = document.createElement("div");
-      newDisplay.id = "visual-display";
-      newDisplay.contentEditable = "true";
-      newDisplay.spellcheck = false;
-      newDisplay.setAttribute("autocorrect", "off");
-      newDisplay.setAttribute("autocapitalize", "off");
-      newDisplay.setAttribute("data-gramm", "false");
-      newDisplay.setAttribute("data-grammarly-reactid", "false");
-      
-      parent.replaceChild(newDisplay, visualDisplay);
-      visualDisplay = newDisplay;
-      attachInputListeners(visualDisplay);
-
-      const sel = window.getSelection();
-      if (sel) sel.removeAllRanges();
-
+      visualDisplay.textContent = "";
       updateSendButton();
     }
-
-    document.addEventListener('touchstart', function(e) {
-      if (e.touches.length === 3) {
-        resetScene();
-      }
-    });
-
-    function openKeyboard() {
-      isKbdHidden = false;
-      deckWrapper.classList.add("animate-slide");
-      deckWrapper.style.marginBottom = `0px`;
-      visualDisplay.focus();
-      updateSendButton();
-      chatTimeline.scrollTop = chatTimeline.scrollHeight;
-    }
-
-    function hideKeyboard() {
-      isKbdHidden = true;
-      const keyboardHeight = customKeyboard.offsetHeight;
-      deckWrapper.classList.add("animate-slide");
-      deckWrapper.style.marginBottom = `-${keyboardHeight}px`;
-      visualDisplay.blur();
-      updateSendButton();
-    }
-
-    let touchStartY = 0;
-    let initialMargin = 0;
-    let isDraggingDeck = false;
-    let lastTouchY = 0;
-    let touchTime = 0;
-    let velocity = 0;
-
-    chatTimeline.addEventListener("touchstart", (e) => {
-      touchStartY = e.touches[0].clientY;
-      lastTouchY = touchStartY;
-      touchTime = Date.now();
-      
-      const style = window.getComputedStyle(deckWrapper);
-      initialMargin = parseFloat(style.marginBottom) || 0;
-
-      const isAtBottom = (chatTimeline.scrollHeight - chatTimeline.scrollTop - chatTimeline.clientHeight) <= 2;
-      
-      if (isAtBottom && !isKbdHidden) {
-        isDraggingDeck = true;
-        deckWrapper.classList.remove("animate-slide");
-      } else {
-        isDraggingDeck = false;
-      }
-    }, { passive: true });
-
-    chatTimeline.addEventListener("touchmove", (e) => {
-      const currentY = e.touches[0].clientY;
-      const deltaY = currentY - touchStartY;
-
-      if (deltaY > 0 && !isDraggingDeck && !isKbdHidden) {
-        const isAtBottom = (chatTimeline.scrollHeight - chatTimeline.scrollTop - chatTimeline.clientHeight) <= 2;
-        if (isAtBottom) {
-          isDraggingDeck = true;
-          deckWrapper.classList.remove("animate-slide");
-        }
-      }
-
-      if (!isDraggingDeck) return;
-
-      const now = Date.now();
-      velocity = (currentY - lastTouchY) / (now - touchTime || 1);
-      lastTouchY = currentY;
-      touchTime = now;
-
-      const maxDismiss = customKeyboard.offsetHeight;
-      let newMargin = initialMargin - deltaY;
-
-      if (newMargin > 0) newMargin = 0; 
-      if (newMargin < -maxDismiss) newMargin = -maxDismiss;
-
-      deckWrapper.style.marginBottom = `${newMargin}px`;
-    }, { passive: true });
-
-    chatTimeline.addEventListener("touchend", () => {
-      if (!isDraggingDeck) return;
-      isDraggingDeck = false;
-
-      const maxDismiss = customKeyboard.offsetHeight;
-      const style = window.getComputedStyle(deckWrapper);
-      const currentMargin = parseFloat(style.marginBottom) || 0;
-
-      if (currentMargin < -(maxDismiss * 0.35) || velocity > 0.4) {
-        hideKeyboard();
-      } else {
-        openKeyboard();
-      }
-    });
-
-    tapbackOverlay.addEventListener("click", (e) => {
-      if (e.target.classList.contains("tapback-option") && activeTapbackTarget) {
-        const emoji = e.target.textContent;
-        let badge = activeTapbackTarget.querySelector(".tapback-badge");
-        if (!badge) {
-          badge = document.createElement("div");
-          badge.className = "tapback-badge";
-          activeTapbackTarget.appendChild(badge);
-        }
-        badge.textContent = emoji;
-        triggerHaptic('double');
-      }
-      tapbackOverlay.style.display = "none";
-      activeTapbackTarget = null;
-    });
-
-    function showTapback(msgBox) {
-      activeTapbackTarget = msgBox;
-      tapbackOverlay.style.display = "flex";
-      triggerHaptic('medium');
-    }
-
-    function toggleKeyboardLayout(e) {
-      if (e) e.preventDefault();
-      triggerHaptic('light');
-      isNumMode = !isNumMode;
-      if (isNumMode) {
-        alphaLayout.style.display = "none";
-        numLayout.style.display = "flex";
-      } else {
-        alphaLayout.style.display = "flex";
-        numLayout.style.display = "none";
-      }
-    }
-
-    document.querySelectorAll(".mode-toggle").forEach(btn => {
-      btn.addEventListener("touchstart", toggleKeyboardLayout, { passive: false });
-      btn.addEventListener("mousedown", toggleKeyboardLayout);
-    });
-
-    document.querySelectorAll(".mic-toggle").forEach(btn => {
-      const handleMic = (e) => {
-        e.preventDefault();
-        triggerHaptic('light');
-        hideKeyboard();
-      };
-      btn.addEventListener("touchstart", handleMic, { passive: false });
-      btn.addEventListener("mousedown", handleMic);
-    });
-
-    document.querySelectorAll(".return-btn").forEach(btn => {
-      const handleReturn = (e) => {
-        e.preventDefault();
-        triggerHaptic('light');
-        insertAtCursor("\n");
-      };
-      btn.addEventListener("touchstart", handleReturn, { passive: false });
-      btn.addEventListener("mousedown", handleReturn);
-    });
 
     function insertAtCursor(text) {
       visualDisplay.focus();
       const sel = window.getSelection();
-      
       if (sel && sel.rangeCount > 0) {
         let range = sel.getRangeAt(0);
-        
         if (!visualDisplay.contains(range.commonAncestorContainer)) {
           range = document.createRange();
           range.selectNodeContents(visualDisplay);
           range.collapse(false);
         }
-
         range.deleteContents();
         const textNode = document.createTextNode(text);
         range.insertNode(textNode);
-        
         range.setStartAfter(textNode);
         range.setEndAfter(textNode);
         sel.removeAllRanges();
@@ -969,35 +665,21 @@
       } else {
         visualDisplay.textContent += text;
       }
-      
       visualDisplay.normalize();
       updateSendButton();
       autoScrollDisplay();
     }
 
-    // FIXED: Real single-character deletion (iOS accurate)
     function deleteAtCursor() {
       visualDisplay.focus();
-      
       const sel = window.getSelection();
       if (!sel || sel.rangeCount === 0) return;
-
       let range = sel.getRangeAt(0);
-
       if (!range.collapsed) {
         range.deleteContents();
-        visualDisplay.normalize();
-        updateSendButton();
-        autoScrollDisplay();
-        return;
+      } else {
+        document.execCommand('delete', false, null);
       }
-
-      if (range.startOffset === 0 && range.startContainer === visualDisplay) {
-        return;
-      }
-
-      document.execCommand('delete', false, null);
-      
       visualDisplay.normalize();
       updateSendButton();
       autoScrollDisplay();
@@ -1015,29 +697,7 @@
       }
     }
 
-    document.addEventListener("touchmove", (e) => {
-      if (activeBackspaceKey && e.touches.length > 0) {
-        const touch = e.touches[0];
-        const rect = activeBackspaceKey.getBoundingClientRect();
-        if (
-          touch.clientX < rect.left - 15 ||
-          touch.clientX > rect.right + 15 ||
-          touch.clientY < rect.top - 15 ||
-          touch.clientY > rect.bottom + 15
-        ) {
-          stopBackspace();
-        }
-      }
-    }, { passive: true });
-
-    document.addEventListener("touchend", stopBackspace);
-    document.addEventListener("touchcancel", stopBackspace);
-    document.addEventListener("mouseup", stopBackspace);
-
-    // FIXED: Realistic tap-to-delete + 400ms hold delay before continuous repeat
     document.querySelectorAll(".key").forEach(key => {
-      if (key.classList.contains("mic-toggle") || key.classList.contains("mode-toggle") || key.classList.contains("return-btn")) return;
-
       const isBackspace = key.classList.contains("backspace-btn");
 
       const handlePressStart = (e) => {
@@ -1049,39 +709,34 @@
         if (isBackspace) {
           stopBackspace();
           activeBackspaceKey = key;
-          
           deleteAtCursor();
-
           backspaceInterval = setTimeout(() => {
-            backspaceInterval = setInterval(() => {
-              deleteAtCursor();
-            }, 50);
+            backspaceInterval = setInterval(deleteAtCursor, 50);
           }, 400);
-
+        } else if (key.classList.contains("mode-toggle")) {
+          isNumMode = !isNumMode;
+          alphaLayout.style.display = isNumMode ? "none" : "flex";
+          numLayout.style.display = isNumMode ? "flex" : "none";
+        } else if (key.classList.contains("return-btn")) {
+          insertAtCursor("\n");
         } else {
           const charVal = key.getAttribute("data-char");
           if (charVal !== null) {
             insertAtCursor(charVal);
-            if (charVal.trim().length === 1) {
-              showKeyPopup(key, charVal.toUpperCase());
-            }
+            if (charVal.trim().length === 1) showKeyPopup(key, charVal.toUpperCase());
           }
         }
       };
 
       const handlePressEnd = () => {
-        if (!isBackspace) {
-          key.classList.remove("pressed");
-        } else {
-          stopBackspace();
-        }
+        if (!isBackspace) key.classList.remove("pressed");
+        else stopBackspace();
       };
 
       key.addEventListener("touchstart", handlePressStart, { passive: false });
       key.addEventListener("touchend", handlePressEnd);
       key.addEventListener("mousedown", handlePressStart);
       key.addEventListener("mouseup", handlePressEnd);
-      key.addEventListener("mouseleave", handlePressEnd);
     });
 
     function showKeyPopup(keyElement, charLabel) {
@@ -1089,41 +744,31 @@
       popup.className = "key-popup";
       popup.textContent = charLabel;
       keyElement.appendChild(popup);
-
-      setTimeout(() => {
-        popup.remove();
-      }, 150);
+      setTimeout(() => popup.remove(), 150);
     }
 
     function updateSendButton() {
       const text = (visualDisplay.textContent || "").trim();
-      if (text.length > 0) {
-        actionTrigger.classList.add("ready");
-      } else {
-        actionTrigger.classList.remove("ready");
-      }
+      if (text.length > 0) actionTrigger.classList.add("ready");
+      else actionTrigger.classList.remove("ready");
     }
 
     actionTrigger.addEventListener("click", handleSend);
 
     function handleSend() {
-      const rawText = visualDisplay.innerText || visualDisplay.textContent || "";
-      const text = rawText.trim();
+      const text = (visualDisplay.textContent || "").trim();
       if (text.length === 0) return;
 
       playSound('send');
       triggerHaptic('medium');
-
       dispatchMessage(text, "outbound");
       outgoingCount++;
-      
       forceClearInput();
       checkAndTriggerReply();
     }
 
     function checkAndTriggerReply() {
       const matchingReply = inboundScript.find(item => item.triggerAfterMsgCount === outgoingCount);
-
       if (matchingReply) {
         setTimeout(() => {
           typingMonitor.style.display = "block";
@@ -1140,12 +785,6 @@
     }
 
     function dispatchMessage(text, vector) {
-      const previousRows = chatTimeline.querySelectorAll(`.msg-row.${vector}-align`);
-      if (previousRows.length > 0) {
-        const lastBox = previousRows[previousRows.length - 1].querySelector('.msg-box');
-        if (lastBox) lastBox.classList.remove('has-tail');
-      }
-
       const row = document.createElement("div");
       row.className = `msg-row ${vector}-align`;
 
@@ -1153,32 +792,15 @@
       box.className = `msg-box msg-${vector} has-tail`;
       box.textContent = text;
 
-      let pressTimer;
-      box.addEventListener("touchstart", () => {
-        pressTimer = setTimeout(() => showTapback(box), 500);
-      }, { passive: true });
-      box.addEventListener("touchend", () => clearTimeout(pressTimer));
-      
-      let lastTap = 0;
-      box.addEventListener("click", () => {
-        const now = Date.now();
-        if (now - lastTap < 300) {
-          showTapback(box);
-        }
-        lastTap = now;
-      });
-
       const stamp = document.createElement("div");
       stamp.className = "status-stamp";
       
       if (vector === "outbound") {
         stamp.textContent = "Delivered";
-        
         setTimeout(() => {
           const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
           stamp.textContent = `Read ${nowTime}`;
         }, READ_DELAY_MS);
-
       } else {
         stamp.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       }
@@ -1186,7 +808,6 @@
       row.appendChild(box);
       row.appendChild(stamp);
       chatTimeline.appendChild(row);
-
       chatTimeline.scrollTop = chatTimeline.scrollHeight;
     }
 
@@ -1195,7 +816,6 @@
       forceClearInput();
       chatTimeline.innerHTML = "";
       typingMonitor.style.display = "none";
-      openKeyboard();
     }
 
     updateSendButton();
