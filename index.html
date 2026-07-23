@@ -883,44 +883,44 @@
       triggerHaptic('medium');
     }
 
+    function toggleKeyboardLayout(e) {
+      if (e) e.preventDefault();
+      triggerHaptic('light');
+      isNumMode = !isNumMode;
+      if (isNumMode) {
+        alphaLayout.style.display = "none";
+        numLayout.style.display = "flex";
+      } else {
+        alphaLayout.style.display = "flex";
+        numLayout.style.display = "none";
+      }
+    }
+
     document.querySelectorAll(".mode-toggle").forEach(btn => {
-      btn.addEventListener("mousedown", (e) => e.preventDefault());
-      btn.addEventListener("touchstart", (e) => e.preventDefault());
-      btn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        triggerHaptic('light');
-        isNumMode = !isNumMode;
-        if (isNumMode) {
-          alphaLayout.style.display = "none";
-          numLayout.style.display = "flex";
-        } else {
-          alphaLayout.style.display = "flex";
-          numLayout.style.display = "none";
-        }
-      });
+      btn.addEventListener("touchstart", toggleKeyboardLayout, { passive: false });
+      btn.addEventListener("mousedown", toggleKeyboardLayout);
     });
 
     document.querySelectorAll(".mic-toggle").forEach(btn => {
-      btn.addEventListener("mousedown", (e) => e.preventDefault());
-      btn.addEventListener("touchstart", (e) => e.preventDefault());
-      btn.addEventListener("click", (e) => {
-        e.stopPropagation();
+      const handleMic = (e) => {
+        e.preventDefault();
         triggerHaptic('light');
         hideKeyboard();
-      });
+      };
+      btn.addEventListener("touchstart", handleMic, { passive: false });
+      btn.addEventListener("mousedown", handleMic);
     });
 
     document.querySelectorAll(".return-btn").forEach(btn => {
-      btn.addEventListener("mousedown", (e) => e.preventDefault());
-      btn.addEventListener("touchstart", (e) => e.preventDefault());
-      btn.addEventListener("click", (e) => {
-        e.stopPropagation();
+      const handleReturn = (e) => {
+        e.preventDefault();
         triggerHaptic('light');
         insertAtCursor("\n");
-      });
+      };
+      btn.addEventListener("touchstart", handleReturn, { passive: false });
+      btn.addEventListener("mousedown", handleReturn);
     });
 
-    // ROBUST CURSOR INSERTION FIX
     function insertAtCursor(text) {
       visualDisplay.focus();
       const sel = window.getSelection();
@@ -928,24 +928,21 @@
       if (sel && sel.rangeCount > 0) {
         let range = sel.getRangeAt(0);
         
-        // Ensure selection is inside visualDisplay container
         if (!visualDisplay.contains(range.commonAncestorContainer)) {
           range = document.createRange();
           range.selectNodeContents(visualDisplay);
-          range.collapse(false); // Move to the very end
+          range.collapse(false);
         }
 
         range.deleteContents();
         const textNode = document.createTextNode(text);
         range.insertNode(textNode);
         
-        // Advance cursor position right after newly inserted text
         range.setStartAfter(textNode);
         range.setEndAfter(textNode);
         sel.removeAllRanges();
         sel.addRange(range);
       } else {
-        // Fallback: append at the end
         visualDisplay.textContent += text;
       }
       
@@ -981,7 +978,7 @@
       const isBackspace = key.classList.contains("backspace-btn");
 
       const handlePressStart = (e) => {
-        e.preventDefault(); // Prevents input element from losing focus
+        e.preventDefault();
         key.classList.add("pressed");
         playSound('tap');
         triggerHaptic('light');
