@@ -656,14 +656,14 @@
       { triggerAfterMsgCount: 5, text: "Clear to move. Backup is in position." }
     ];
 
-    const RESPONSE_DELAY_MS = 4000;
+    const RESPONSE_DELAY_MS = 4500;
+    const READ_DELAY_MS = 2500; // Time in milliseconds before "Delivered" changes to "Read"
 
     let outgoingCount = 0;
     let isNumMode = false;
     let backspaceInterval = null;
     let isKbdHidden = false;
     let activeTapbackTarget = null;
-    let lastOutboundStampEl = null;
 
     const chatView = document.getElementById("chat-view");
     const chatTimeline = document.getElementById("chat-timeline");
@@ -803,7 +803,6 @@
       const style = window.getComputedStyle(deckWrapper);
       initialMargin = parseFloat(style.marginBottom) || 0;
 
-      // Only engage keyboard drag dismiss if scrolling isn't actively moving history
       const isAtBottom = (chatTimeline.scrollHeight - chatTimeline.scrollTop - chatTimeline.clientHeight) <= 2;
       
       if (isAtBottom && !isKbdHidden) {
@@ -818,7 +817,6 @@
       const currentY = e.touches[0].clientY;
       const deltaY = currentY - touchStartY;
 
-      // Drag down detected from bottom position
       if (deltaY > 0 && !isDraggingDeck && !isKbdHidden) {
         const isAtBottom = (chatTimeline.scrollHeight - chatTimeline.scrollTop - chatTimeline.clientHeight) <= 2;
         if (isAtBottom) {
@@ -1028,14 +1026,13 @@
       const matchingReply = inboundScript.find(item => item.triggerAfterMsgCount === outgoingCount);
 
       if (matchingReply) {
+        // Show typing indicator shortly after the message turns to "Read"
         setTimeout(() => {
-          if (lastOutboundStampEl) {
-            lastOutboundStampEl.textContent = `Read ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-          }
           typingMonitor.style.display = "block";
           chatTimeline.scrollTop = chatTimeline.scrollHeight;
-        }, 1500);
+        }, READ_DELAY_MS + 800);
 
+        // Receive the incoming message
         setTimeout(() => {
           typingMonitor.style.display = "none";
           playSound('receive');
@@ -1079,7 +1076,13 @@
       
       if (vector === "outbound") {
         stamp.textContent = "Delivered";
-        lastOutboundStampEl = stamp;
+        
+        // Schedule status change to "Read" after a brief delay
+        setTimeout(() => {
+          const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          stamp.textContent = `Read ${nowTime}`;
+        }, READ_DELAY_MS);
+
       } else {
         stamp.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       }
